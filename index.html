@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五笔达人 (Wubi Master) - 五笔86版刻意练习与可视化拆字助手</title>
+    <meta name="description" content="专为五笔86版学习者设计的刻意练习工具。提供一级简码、二级简码、常用字、难拆字的盲打练习，支持任意汉字五笔编码与拼音可视化查询，配有动态字根键盘提示，助你快速建立五笔肌肉记忆，突破速度瓶颈。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <div class="app-container">
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-logo">
+                    <span class="logo-icon">五</span>
+                    <div class="logo-text">
+                        <h1>五笔达人 <span class="logo-sub">Wubi Master</span></h1>
+                        <p>五笔 86 版刻意练习 & 拆字助手</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="btn-icon" title="切换主题">🌓</button>
+                    <div class="keyboard-layout-info">
+                        <span class="badge">Rime 86 极点码表</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Grid -->
+            <main class="app-main">
+                <!-- Left Side: Practice & Dashboard -->
+                <section class="panel practice-panel">
+                    <div class="panel-header">
+                        <nav class="practice-tabs">
+                            <button class="tab-btn active" data-mode="yiji">一级简码</button>
+                            <button class="tab-btn" data-mode="erji">二级简码</button>
+                            <button class="tab-btn" data-mode="highfreq">高频常用字</button>
+                            <button class="tab-btn" data-mode="hard">难拆字专项</button>
+                            <button class="tab-btn" data-mode="custom">自由练习</button>
+                            <button class="tab-btn" data-mode="wrong-review" id="tab-wrong-review">错字复习</button>
+                        </nav>
+                        <button id="reset-practice" class="btn-icon" title="重置本轮练习">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                                <path d="M16 3h5v5"/>
+                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                                <path d="M8 21H3v-5"/>
+                            </svg>
+                        </button>
+
+                    </div>
+
+                    <!-- Stats Dashboard -->
+                    <div class="stats-bar">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-wpm">0</div>
+                            <div class="stat-label">速度 (WPM)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-accuracy">100%</div>
+                            <div class="stat-label">准确率</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-progress">0/0</div>
+                            <div class="stat-label">进度</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-time">00:00</div>
+                            <div class="stat-label">用时</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-wrong">0</div>
+                            <div class="stat-label">错字数</div>
+                        </div>
+                    </div>
+
+                    <!-- Practice Zone -->
+                    <div class="practice-zone">
+                        <!-- Current Paragraph Display -->
+                        <div class="practice-text-flow" id="practice-text-flow">
+                            <!-- All characters will be pre-rendered here -->
+                        </div>
+
+                        <!-- Active Character Detail (Hints) -->
+                        <div class="active-char-detail" id="active-char-detail">
+                            <div class="char-hints" id="char-hints">
+                                <span class="hint-pinyin" id="hint-pinyin">wǔ</span>
+                                <span class="hint-wubi" id="hint-wubi">gghg</span>
+                            </div>
+                        </div>
+
+                        <!-- Visual Guide for Roots -->
+                        <div class="roots-visual-guide" id="roots-guide">
+                            <!-- Roots split sequence will be injected here -->
+                        </div>
+
+                        <!-- Input Area -->
+                        <div class="input-container">
+                            <input type="text" id="practice-input" autocomplete="off" autofocus placeholder="在这里输入对应的五笔编码（用物理键盘敲击）" />
+                            <div class="input-overlay" id="input-overlay"></div>
+                        </div>
+
+                        <div class="practice-instructions">
+                            <p id="instruction-text">敲击物理键盘对应的五笔编码，然后按 <span class="kbd-key">Space 空格</span> 提交。遇到不会的字，可以停顿 1.5 秒查看键位提示。</p>
+                        </div>
+
+                        <!-- Diagnostic Report Modal (Initially Hidden) -->
+                        <div class="diagnostic-report" id="diagnostic-report" style="display: none;">
+                            <h3 class="report-title">🏆 本轮练习诊断报告</h3>
+                            
+                            <div class="report-grid">
+                                <div class="report-card">
+                                    <div class="report-value" id="report-wpm">0</div>
+                                    <div class="report-label">🏎️ 速度 (WPM)</div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-value" id="report-accuracy">100%</div>
+                                    <div class="report-label">🎯 准确率</div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-value" id="report-streak">0</div>
+                                    <div class="report-label">🔥 最大连击</div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-value" id="report-backspace">0 (0%)</div>
+                                    <div class="report-label">🔙 退格击键</div>
+                                </div>
+                                <div class="report-card">
+                                    <div class="report-value" id="report-hesitation">0 (0%)</div>
+                                    <div class="report-label">🧠 脑力卡顿</div>
+                                </div>
+                            </div>
+                            
+                            <div class="report-errors">
+                                <h4>❌ 易错按键排查 (Top 3)：</h4>
+                                <div class="error-keys-badges" id="report-error-badges">
+                                    <!-- Badges like <span class="error-badge">V (折区, 3次)</span> -->
+                                </div>
+                            </div>
+                            
+                            <div class="report-feedback" id="report-feedback">
+                                正在分析您的打字习惯...
+                            </div>
+                            
+                            <div class="report-actions">
+                                <button id="report-retry-wrong-btn" class="btn-primary" style="flex: 2;">重练本轮错字</button>
+                                <button id="report-restart-btn" class="btn-secondary" style="flex: 1;">再来一轮</button>
+                                <button id="report-close-btn" class="btn-secondary" style="flex: 1;">关闭</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Side: Query Tool -->
+                <section class="panel query-panel">
+                    <div class="panel-header">
+                        <h2>🔍 五笔查字 / 拆解助手</h2>
+                    </div>
+                    <div class="query-container">
+                        <div class="search-box">
+                            <input type="text" id="query-input" placeholder="输入任意汉字查编码与拆分（如：结）" maxlength="10">
+                            <button id="query-btn" class="btn-primary">查询</button>
+                        </div>
+                        
+                        <div class="query-result" id="query-result">
+                            <div class="query-empty">
+                                <p>输入汉字，即可实时查询其五笔86编码、拼音、以及在键盘上的拆分按键路径。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Wrong Character Ledger -->
+                    <div class="wrong-list-container">
+                        <h3>❌ 本次错字本</h3>
+                        <div class="wrong-chars" id="wrong-chars-list">
+                            <!-- Wrong characters will be listed here -->
+                            <span class="empty-text">暂无错字，保持下去！</span>
+                        </div>
+                        <div class="wrong-actions" id="wrong-actions" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                            <button id="export-anki-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">导出 Anki</button>
+                            <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
+                            <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Bottom: Keyboard Display -->
+            <footer class="app-footer">
+                <div class="keyboard-header">
+                    <h3>📖 五笔86键位字根图 <span class="keyboard-hint">（物理按键会实时高亮，悬停可查看键位口诀与全部字根）</span></h3>
+                    <div class="keyboard-controls">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-keycaps" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">显示键面字根</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="virtual-keyboard" id="keyboard-wrapper">
+                    <!-- Keyboard keys will be dynamically generated and injected here -->
+                </div>
+            </footer>
+
+            <!-- Mnemonic Tooltip/Card Display -->
+            <div class="mnemonic-card" id="mnemonic-card">
+                <div class="mnemonic-key">G</div>
+                <div class="mnemonic-formula">王旁青头戋五一</div>
+                <div class="mnemonic-roots">字根：王 𤣩 五 戋 一</div>
+                <div class="mnemonic-desc">横区第1键 (11)，最外侧键</div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
