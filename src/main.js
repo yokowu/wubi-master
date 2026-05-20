@@ -1200,6 +1200,9 @@ function recordPracticeSession() {
 function renderHistoryUI() {
     if (!elements.historyTableBody) return;
     
+    // Draw the SVG trend line chart
+    renderTrendChart();
+    
     const hist = state.history;
     const total = hist.length;
     let avgWpm = 0;
@@ -1289,6 +1292,83 @@ function exportHistoryToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+function renderTrendChart() {
+    const chartContainer = document.getElementById('history-chart-container');
+    if (!chartContainer) return;
+    
+    const hist = state.history.slice(0, 10).reverse(); // Last 10 sessions chronologically
+    if (hist.length < 2) {
+        chartContainer.innerHTML = '<div class="chart-empty">需完成至少 2 次练习以绘制速度走势图</div>';
+        return;
+    }
+    
+    const width = 360;
+    const height = 110;
+    const paddingLeft = 32;
+    const paddingRight = 16;
+    const paddingTop = 20;
+    const paddingBottom = 16;
+    
+    const wpms = hist.map(h => h.wpm);
+    const maxWpm = Math.max(...wpms, 40);
+    const minWpm = Math.min(...wpms, 0);
+    const rangeWpm = maxWpm - minWpm || 10;
+    
+    // Calculate SVG coordinate points
+    const points = hist.map((item, index) => {
+        const x = paddingLeft + (index * (width - paddingLeft - paddingRight) / (hist.length - 1));
+        const y = height - paddingBottom - ((item.wpm - minWpm) * (height - paddingTop - paddingBottom) / rangeWpm);
+        return { x, y, wpm: item.wpm, mode: item.mode };
+    });
+    
+    // Build trend line path
+    let pathD = '';
+    points.forEach((p, idx) => {
+        if (idx === 0) pathD += `M ${p.x} ${p.y}`;
+        else pathD += ` L ${p.x} ${p.y}`;
+    });
+    
+    // Grid lines and Y-axis scale
+    let gridLines = '';
+    const gridCount = 2; // 3 lines total
+    for (let i = 0; i <= gridCount; i++) {
+        const y = paddingTop + (i * (height - paddingTop - paddingBottom) / gridCount);
+        const wpmVal = Math.round(maxWpm - (i * rangeWpm / gridCount));
+        gridLines += `
+            <line x1="${paddingLeft}" y1="${y}" x2="${width - paddingRight}" y2="${y}" stroke="var(--border-color-muted)" stroke-width="0.5" stroke-dasharray="2,2"/>
+            <text x="${paddingLeft - 6}" y="${y + 3}" font-size="8" fill="var(--text-muted)" text-anchor="end" font-family="monospace">${wpmVal}</text>
+        `;
+    }
+    
+    // Dots and text WPM labels
+    let dots = '';
+    let labels = '';
+    points.forEach((p, idx) => {
+        dots += `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--bg-panel)" stroke="var(--text-primary)" stroke-width="1.5" class="chart-dot"/>`;
+        
+        // Show WPM value above dot
+        labels += `<text x="${p.x}" y="${p.y - 8}" font-size="7" font-weight="700" fill="var(--text-primary)" text-anchor="middle" font-family="monospace">${p.wpm}</text>`;
+    });
+    
+    const svgContent = `
+        <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow: visible;">
+            <!-- Grid Lines & Y Axis Labels -->
+            ${gridLines}
+            
+            <!-- Trend Line -->
+            <path d="${pathD}" fill="none" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            
+            <!-- Data Dots -->
+            ${dots}
+            
+            <!-- Value Labels -->
+            ${labels}
+        </svg>
+    `;
+    
+    chartContainer.innerHTML = svgContent;
 }
 
 function loadTheme() {

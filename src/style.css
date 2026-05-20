@@ -1292,4 +1292,46 @@ input:checked + .slider:before {
     gap: 8px;
 }
 
+/* History Chart Card */
+.history-chart-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-chart-card .chart-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.history-chart-card .chart-container {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-empty {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+}
+
+.chart-dot {
+    transition: r 0.2s ease, fill 0.2s ease;
+    cursor: pointer;
+}
+
+.chart-dot:hover {
+    r: 5;
+    fill: var(--text-primary);
+}
+
+
 
