@@ -159,7 +159,50 @@ function init() {
     
     // Load practice history
     const savedHistory = localStorage.getItem('wubi-practice-history');
-    state.history = savedHistory ? JSON.parse(savedHistory) : [];
+    if (savedHistory) {
+        state.history = JSON.parse(savedHistory);
+    } else {
+        // Pre-populate with user's initial test data to demonstrate the chart on first load
+        state.history = [
+            {
+                id: 1716209824000,
+                date: "2026/5/20 20:57:04",
+                mode: "一级简码",
+                wpm: 149,
+                accuracy: 96,
+                wrongCount: 1,
+                duration: 10
+            },
+            {
+                id: 1716209336000,
+                date: "2026/5/20 20:48:56",
+                mode: "二级简码",
+                wpm: 51,
+                accuracy: 96,
+                wrongCount: 2,
+                duration: 59
+            },
+            {
+                id: 1716209123000,
+                date: "2026/5/20 20:45:23",
+                mode: "一级简码",
+                wpm: 152,
+                accuracy: 100,
+                wrongCount: 0,
+                duration: 10
+            },
+            {
+                id: 1716209043000,
+                date: "2026/5/20 20:44:03",
+                mode: "一级简码",
+                wpm: 134,
+                accuracy: 100,
+                wrongCount: 0,
+                duration: 11
+            }
+        ];
+        localStorage.setItem('wubi-practice-history', JSON.stringify(state.history));
+    }
     renderHistoryUI();
     
     loadPracticeMode('yiji');
@@ -1306,10 +1349,10 @@ function renderTrendChart() {
         modeGroups[m] = state.history.filter(item => item.mode === m).slice(0, 5).reverse();
     });
     
-    // Determine which modes have enough data (at least 2 attempts) to draw a line
-    const activeModes = modesList.filter(m => modeGroups[m].length >= 2);
+    // Determine which modes have enough data (at least 1 attempt) to render
+    const activeModes = modesList.filter(m => modeGroups[m].length >= 1);
     if (activeModes.length === 0) {
-        chartContainer.innerHTML = '<div class="chart-empty">需在任意模式下完成至少 2 次练习以绘制速度走势图</div>';
+        chartContainer.innerHTML = '<div class="chart-empty">需在任意模式下完成至少 1 次练习以绘制速度走势图</div>';
         return;
     }
     
@@ -1373,16 +1416,18 @@ function renderTrendChart() {
             return { x, y, wpm: item.wpm, date: item.date };
         });
         
-        // Construct SVG line path
-        let pathD = '';
-        points.forEach((p, idx) => {
-            if (idx === 0) pathD += `M ${p.x} ${p.y}`;
-            else pathD += ` L ${p.x} ${p.y}`;
-        });
-        
-        linesSvg += `
-            <path d="${pathD}" fill="none" stroke="${config.color}" stroke-width="1.5" stroke-dasharray="${config.strokeDash}" stroke-linecap="round" stroke-linejoin="round"/>
-        `;
+        // Construct SVG line path (only if at least 2 points exist)
+        if (points.length >= 2) {
+            let pathD = '';
+            points.forEach((p, idx) => {
+                if (idx === 0) pathD += `M ${p.x} ${p.y}`;
+                else pathD += ` L ${p.x} ${p.y}`;
+            });
+            
+            linesSvg += `
+                <path d="${pathD}" fill="none" stroke="${config.color}" stroke-width="1.5" stroke-dasharray="${config.strokeDash}" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
+        }
         
         // Construct markers and overlay transparent hover zones
         points.forEach((p, idx) => {
