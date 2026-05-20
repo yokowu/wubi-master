@@ -191,6 +191,54 @@
                                 <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
                                 <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
                             </div>
+                            
+                            <!-- Weakness & Stroke Analysis -->
+                            <div class="weakness-analysis-container" style="margin-top: 15px; border-top: 1px solid var(--border-color-muted); padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                                <div class="weakness-header" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">🎯 笔画区薄弱度分析</h3>
+                                    <button id="reinforce-weak-btn" class="btn-primary" style="font-size: 10px; padding: 4px 8px; border-radius: var(--radius-sm); cursor: pointer;" disabled>
+                                        薄弱区强化
+                                    </button>
+                                </div>
+                                <div class="weakness-bars" id="weakness-bars-container">
+                                    <!-- Dynamic progress bars for the 5 zones -->
+                                    <div class="weakness-bar-row">
+                                        <div class="weakness-bar-info">
+                                            <span>横 (一) 1区 [G-A]</span>
+                                            <span class="weakness-count" id="weak-count-1">0次</span>
+                                        </div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-1" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="weakness-bar-row">
+                                        <div class="weakness-bar-info">
+                                            <span>竖 (丨) 2区 [H-M]</span>
+                                            <span class="weakness-count" id="weak-count-2">0次</span>
+                                        </div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-2" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="weakness-bar-row">
+                                        <div class="weakness-bar-info">
+                                            <span>撇 (丿) 3区 [T-Q]</span>
+                                            <span class="weakness-count" id="weak-count-3">0次</span>
+                                        </div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-3" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="weakness-bar-row">
+                                        <div class="weakness-bar-info">
+                                            <span>捺 (丶) 4区 [Y-P]</span>
+                                            <span class="weakness-count" id="weak-count-4">0次</span>
+                                        </div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-4" style="width: 0%;"></div></div>
+                                    </div>
+                                    <div class="weakness-bar-row">
+                                        <div class="weakness-bar-info">
+                                            <span>折 (乙) 5区 [N-X]</span>
+                                            <span class="weakness-count" id="weak-count-5">0次</span>
+                                        </div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-5" style="width: 0%;"></div></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

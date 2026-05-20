@@ -740,6 +740,57 @@ body {
     border-radius: var(--radius-sm);
 }
 
+/* Weakness Analysis CSS Styling */
+.weakness-analysis-container {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border-color-muted);
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.weakness-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weakness-bar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.weakness-bar-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.weakness-bar-info span.weakness-count {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.weakness-bar-bg {
+    height: 6px;
+    background: var(--border-color-muted);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.weakness-bar-fill {
+    height: 100%;
+    background: #c23616; /* Soft elegant crimson red for errors */
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.4s cubic-bezier(0.1, 0.8, 0.3, 1);
+}
+
+body.dark .weakness-bar-fill {
+    background: #e84118;
+}
+
 /* Keyboard Display Footer */
 .app-footer {
     background: var(--bg-panel);

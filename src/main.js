@@ -76,6 +76,7 @@ let state = {
     wrongKeysCount: {},             // Map to track wrong key counts
     hasHesitatedOnCurrent: false,   // Track if user has already hesitated on current char
     wrongCharsLedger: new Set(),    // Characters wrong in this session
+    accumulatedWrongZones: { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 }, // Lifetime errors per zone
     
     // Hint timer
     hintTimeout: null,
@@ -95,6 +96,9 @@ const elements = {
     progress: null,
     time: null,
     wrong: null,
+    instructionText: null,
+    weaknessBarsContainer: null,
+    reinforceWeakBtn: null,
     
     practiceTextFlow: null,
     resetPractice: null,
@@ -162,6 +166,20 @@ function init() {
     state.history = savedHistory ? JSON.parse(savedHistory) : [];
     renderHistoryUI();
     
+    // Load accumulated errors for weakness analysis
+    const savedErrors = localStorage.getItem('wubi-accumulated-errors');
+    if (savedErrors) {
+        try {
+            const parsed = JSON.parse(savedErrors);
+            if (parsed && parsed.zones) {
+                state.accumulatedWrongZones = parsed.zones;
+            }
+        } catch(e) {
+            console.error("Failed to load accumulated errors", e);
+        }
+    }
+    renderWeaknessAnalysisUI();
+    
     loadPracticeMode('yiji');
     loadTheme();
 }
@@ -174,6 +192,9 @@ function bindDOMElements() {
     elements.progress = document.getElementById('stat-progress');
     elements.time = document.getElementById('stat-time');
     elements.wrong = document.getElementById('stat-wrong');
+    elements.instructionText = document.getElementById('instruction-text');
+    elements.weaknessBarsContainer = document.getElementById('weakness-bars-container');
+    elements.reinforceWeakBtn = document.getElementById('reinforce-weak-btn');
     
     elements.practiceTextFlow = document.getElementById('practice-text-flow');
     elements.resetPractice = document.getElementById('reset-practice');
@@ -337,12 +358,74 @@ function loadPracticeMode(mode) {
                 py: info ? info.p : ''
             };
         }).filter(item => item.code);
+    } else if (mode === 'reinforce') {
+        const ZONE_KEYS = {
+            '1': ['g', 'f', 'd', 's', 'a'],
+            '2': ['h', 'j', 'k', 'l', 'm'],
+            '3': ['t', 'r', 'e', 'w', 'q'],
+            '4': ['y', 'u', 'i', 'o', 'p'],
+            '5': ['n', 'b', 'v', 'c', 'x']
+        };
+        // Find weakest zone based on accumulated errors
+        let weakestZone = '1';
+        let maxErrors = -1;
+        for (const [zone, count] of Object.entries(state.accumulatedWrongZones)) {
+            if (count > maxErrors) {
+                maxErrors = count;
+                weakestZone = zone;
+            }
+        }
+        
+        const zoneKeys = ZONE_KEYS[weakestZone];
+        const candidateMap = new Map();
+        
+        // 1. Add actual wrong characters of this zone
+        Array.from(state.wrongCharsLedger).forEach(char => {
+            const info = WUBI_DICT[char];
+            if (info && info.s && zoneKeys.includes(info.s[0])) {
+                candidateMap.set(char, {
+                    char: char,
+                    code: info.s,
+                    full: info.w,
+                    py: info.p
+                });
+            }
+        });
+        
+        // 2. Add candidates from HIGH_FREQ_LIST starting with zone keys
+        HIGH_FREQ_LIST.forEach(item => {
+            if (item && item.code && zoneKeys.includes(item.code[0])) {
+                candidateMap.set(item.char, {
+                    char: item.char,
+                    code: item.code,
+                    full: item.full,
+                    py: item.py
+                });
+            }
+        });
+        
+        // 3. Add candidates from ERJI_LIST starting with zone keys
+        ERJI_LIST.forEach(item => {
+            if (item && item.code && zoneKeys.includes(item.code[0])) {
+                candidateMap.set(item.char, {
+                    char: item.char,
+                    code: item.code,
+                    full: item.full,
+                    py: item.py
+                });
+            }
+        });
+        
+        const allCandidates = Array.from(candidateMap.values());
+        sourceList = shuffleArray([...allCandidates]).slice(0, 30);
     }
     
-    if (mode !== 'custom' && mode !== 'wrong-review') {
+    if (mode !== 'custom' && mode !== 'wrong-review' && mode !== 'reinforce') {
         state.queue = shuffleArray([...sourceList]).slice(0, 50);
     } else if (mode === 'wrong-review') {
         state.queue = shuffleArray([...sourceList]);
+    } else if (mode === 'reinforce') {
+        state.queue = [...sourceList]; // Already shuffled and sliced to 30
     } else {
         state.queue = [];
     }
@@ -420,6 +503,39 @@ function updatePracticeUI() {
     }
     
     elements.progress.textContent = `${state.currentIndex}/${state.queue.length}`;
+    
+    // Update instruction text dynamically
+    if (elements.instructionText) {
+        if (state.mode === 'reinforce') {
+            const ZONE_KEYS = {
+                '1': ['g', 'f', 'd', 's', 'a'],
+                '2': ['h', 'j', 'k', 'l', 'm'],
+                '3': ['t', 'r', 'e', 'w', 'q'],
+                '4': ['y', 'u', 'i', 'o', 'p'],
+                '5': ['n', 'b', 'v', 'c', 'x']
+            };
+            const ZONE_LABELS = {
+                '1': '横区 (一) 笔画字根',
+                '2': '竖区 (丨) 笔画字根',
+                '3': '撇区 (丿) 笔画字根',
+                '4': '捺区 (丶) 笔画字根',
+                '5': '折区 (乙) 笔画字根'
+            };
+            let weakestZone = '1';
+            let maxErrors = -1;
+            for (const [zone, count] of Object.entries(state.accumulatedWrongZones)) {
+                if (count > maxErrors) {
+                    maxErrors = count;
+                    weakestZone = zone;
+                }
+            }
+            const label = ZONE_LABELS[weakestZone];
+            const keys = ZONE_KEYS[weakestZone].join(', ').toUpperCase();
+            elements.instructionText.innerHTML = `🎯 <b>${label}强化训练中</b>：系统当前针对您的最薄弱键区（<b>${keys}</b>）进行特训。请按空格提交击键。`;
+        } else {
+            elements.instructionText.innerHTML = `敲击物理键盘对应的五笔编码，然后按 <span class="kbd-key">Space 空格</span> 提交。遇到不会的字，可以停顿 1.5 秒查看键位提示。`;
+        }
+    }
 }
 
 
@@ -804,6 +920,45 @@ function clearWrongLedger() {
     renderWrongLedgerUI();
 }
 
+function renderWeaknessAnalysisUI() {
+    const data = state.accumulatedWrongZones;
+    const counts = [
+        data['1'] || 0,
+        data['2'] || 0,
+        data['3'] || 0,
+        data['4'] || 0,
+        data['5'] || 0
+    ];
+    
+    const maxCount = Math.max(...counts);
+    const totalCount = counts.reduce((sum, c) => sum + c, 0);
+    
+    // Enable/disable the reinforcement button
+    if (elements.reinforceWeakBtn) {
+        if (totalCount > 0) {
+            elements.reinforceWeakBtn.removeAttribute('disabled');
+        } else {
+            elements.reinforceWeakBtn.setAttribute('disabled', 'true');
+        }
+    }
+    
+    // Render counts and update fills
+    for (let i = 1; i <= 5; i++) {
+        const count = data[i.toString()] || 0;
+        const countSpan = document.getElementById(`weak-count-${i}`);
+        const fillBar = document.getElementById(`weak-fill-${i}`);
+        
+        if (countSpan) {
+            countSpan.textContent = `${count}次`;
+        }
+        
+        if (fillBar) {
+            const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+            fillBar.style.width = `${pct}%`;
+        }
+    }
+}
+
 function generateAnkiContent() {
     let tsvRows = [];
     state.wrongCharsLedger.forEach(char => {
@@ -867,9 +1022,31 @@ function trackWrongKey(typed, correct) {
         if (i >= typed.length || typed[i] !== correct[i]) {
             const targetKey = correct[i];
             state.wrongKeysCount[targetKey] = (state.wrongKeysCount[targetKey] || 0) + 1;
+            accumulatePermanentError(targetKey);
             break;
         }
     }
+}
+
+function accumulatePermanentError(key) {
+    key = key.toLowerCase();
+    const KEY_TO_ZONE = {
+        'g': '1', 'f': '1', 'd': '1', 's': '1', 'a': '1',
+        'h': '2', 'j': '2', 'k': '2', 'l': '2', 'm': '2',
+        't': '3', 'r': '3', 'e': '3', 'w': '3', 'q': '3',
+        'y': '4', 'u': '4', 'i': '4', 'o': '4', 'p': '4',
+        'n': '5', 'b': '5', 'v': '5', 'c': '5', 'x': '5'
+    };
+    const zone = KEY_TO_ZONE[key];
+    if (!zone) return;
+    
+    state.accumulatedWrongZones[zone] = (state.accumulatedWrongZones[zone] || 0) + 1;
+    
+    const savedData = {
+        zones: state.accumulatedWrongZones
+    };
+    localStorage.setItem('wubi-accumulated-errors', JSON.stringify(savedData));
+    renderWeaknessAnalysisUI();
 }
 
 function showDiagnosticReport() {
@@ -1083,6 +1260,15 @@ function setupEventListeners() {
     elements.exportAnkiBtn.addEventListener('click', exportWrongCharsToAnki);
     elements.copyAnkiBtn.addEventListener('click', copyWrongCharsToClipboard);
     
+    if (elements.reinforceWeakBtn) {
+        elements.reinforceWeakBtn.addEventListener('click', () => {
+            // Remove active state from all tabs
+            elements.tabs.forEach(t => t.classList.remove('active'));
+            loadPracticeMode('reinforce');
+            elements.practiceInput.focus();
+        });
+    }
+    
     // Diagnostic Report Event Listeners
     if (elements.reportRetryWrongBtn) {
         elements.reportRetryWrongBtn.addEventListener('click', () => {
@@ -1173,7 +1359,8 @@ function recordPracticeSession() {
         'highfreq': '常用高频',
         'hard': '难字专项',
         'custom': '自由练习',
-        'wrong-review': '错字复习'
+        'wrong-review': '错字复习',
+        'reinforce': '薄弱区强化'
     };
     
     const record = {
