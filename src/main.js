@@ -1,5 +1,6 @@
 import './style.css';
 import { WUBI_DICT, YIJI_LIST, ERJI_LIST, HIGH_FREQ_LIST, HARD_LIST } from './wubi86_data.js';
+import { WUBI_COMPONENTS } from './wubi_components.js';
 
 // Define the real 25 first-level shortcodes (一级简码) for Wubi 86
 const REAL_YIJI_CHARS = ['一', '地', '在', '要', '工', '上', '是', '中', '国', '同', '民', '有', '产', '不', '为', '这', '我', '的', '和', '主', '人', '以', '发', '了', '经'];
@@ -40,7 +41,7 @@ const KEY_ROOTS = {
     'k': { zone: 2, name: 'K', formula: '口与川字根稀', roots: '口 川', desc: '竖区第3键 (23)' },
     'l': { zone: 2, name: 'L', formula: '田甲方框曾头立', roots: '田 甲 国 囗 四 皿 罒 曾 𠍦', desc: '竖区第4键 (24)' },
     'm': { zone: 2, name: 'M', formula: '山由贝下几朵花', roots: '山 由 贝 冂 几 骨', desc: '竖区第5键 (25)' },
-    'x': { zone: 5, name: 'X', formula: '幺母', roots: '幺 纟 母 𢎘 𠃓', desc: '折区第5键 (55)' },
+    'x': { zone: 5, name: 'X', formula: '幺母', roots: '幺 纟 母 𢎘 𠃓 匕', desc: '折区第5键 (55)' },
     'c': { zone: 5, name: 'C', formula: '又巴马叠叉', roots: '又 巴 马 𠃜 𠃑', desc: '折区第4键 (54)' },
     'v': { zone: 5, name: 'V', formula: '女刀九臼山底', roots: '女 刀 𠂊 九 臼 𦥑 巛 𡿨', desc: '折区第3键 (53)' },
     'b': { zone: 5, name: 'B', formula: '子耳了也框底', roots: '子 孑 𢎘 耳 阝 卩 了 也', desc: '折区第2键 (52)' },
@@ -537,6 +538,55 @@ function updatePracticeUI() {
         }
     }
 }
+// Find the exact matching root for a given character and key using CJK component decomposition
+function findMatchingRoot(char, key) {
+    const config = KEY_ROOTS[key];
+    if (!config) return '';
+    
+    const keyRoots = config.roots.split(' ');
+    const fallback = keyRoots[0] || '';
+    
+    if (!char) return fallback;
+    
+    const charComponents = WUBI_COMPONENTS[char] || [];
+    
+    // Alias map for fuzzy/visual matching of components in Wubi 86
+    const COMPONENT_ALIASES = {
+        '纟': ['丝', '纟'],
+        '人': ['亻', '人', '八'],
+        '水': ['氵', '水', '氺'],
+        '言': ['讠', '言'],
+        '草': ['艹', '草'],
+        '之': ['辶', '之', '廴'],
+        '金': ['钅', '金'],
+        '饣': ['饣', '食'],
+        '心': ['忄', '心', '⺗'],
+        '宀': ['宀', '冖'],
+        '火': ['灬', '火'],
+        '手': ['扌', '手'],
+        '竹': ['𥫗', '竹'],
+        '礻': ['礻', '示'],
+        '衤': ['衤', '衣']
+    };
+    
+    // 1. Direct match check
+    for (const r of keyRoots) {
+        if (char === r) return r;
+        if (charComponents.includes(r)) return r;
+    }
+    
+    // 2. Alias match check
+    for (const r of keyRoots) {
+        const aliases = COMPONENT_ALIASES[r] || [];
+        for (const a of aliases) {
+            if (charComponents.includes(a)) {
+                return r;
+            }
+        }
+    }
+    
+    return fallback;
+}
 
 
 function renderRootsGuide(wordObj) {
@@ -561,7 +611,7 @@ function renderRootsGuide(wordObj) {
         if (config) {
             const rootSpan = document.createElement('span');
             rootSpan.className = 'root-symbol';
-            rootSpan.textContent = config.roots.split(' ')[0];
+            rootSpan.textContent = findMatchingRoot(wordObj.char, key);
             card.appendChild(rootSpan);
         }
         
@@ -786,10 +836,11 @@ function performQuery() {
                 const k = code[i];
                 const keyConfig = KEY_ROOTS[k];
                 if (keyConfig) {
+                    const matchedSymbol = findMatchingRoot(char, k);
                     resultHTML += `
                         <div class="result-root-item">
                             <span class="key">${k.toUpperCase()}</span>
-                            <span class="symbol">${keyConfig.roots.split(' ')[0]}</span>
+                            <span class="symbol">${matchedSymbol}</span>
                             <span class="formula">${keyConfig.formula}</span>
                         </div>
                     `;
@@ -973,8 +1024,8 @@ function generateAnkiContent() {
                 const k = code[i];
                 const keyConfig = KEY_ROOTS[k];
                 if (keyConfig) {
-                    const primaryRoot = keyConfig.roots.split(' ')[0];
-                    rootsPath.push(`${primaryRoot}(${k.toUpperCase()})`);
+                    const matchedSymbol = findMatchingRoot(char, k);
+                    rootsPath.push(`${matchedSymbol}(${k.toUpperCase()})`);
                 }
             }
             const pathStr = rootsPath.join(' → ');
