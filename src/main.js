@@ -159,50 +159,7 @@ function init() {
     
     // Load practice history
     const savedHistory = localStorage.getItem('wubi-practice-history');
-    if (savedHistory) {
-        state.history = JSON.parse(savedHistory);
-    } else {
-        // Pre-populate with user's initial test data to demonstrate the chart on first load
-        state.history = [
-            {
-                id: 1716209824000,
-                date: "2026/5/20 20:57:04",
-                mode: "一级简码",
-                wpm: 149,
-                accuracy: 96,
-                wrongCount: 1,
-                duration: 10
-            },
-            {
-                id: 1716209336000,
-                date: "2026/5/20 20:48:56",
-                mode: "二级简码",
-                wpm: 51,
-                accuracy: 96,
-                wrongCount: 2,
-                duration: 59
-            },
-            {
-                id: 1716209123000,
-                date: "2026/5/20 20:45:23",
-                mode: "一级简码",
-                wpm: 152,
-                accuracy: 100,
-                wrongCount: 0,
-                duration: 10
-            },
-            {
-                id: 1716209043000,
-                date: "2026/5/20 20:44:03",
-                mode: "一级简码",
-                wpm: 134,
-                accuracy: 100,
-                wrongCount: 0,
-                duration: 11
-            }
-        ];
-        localStorage.setItem('wubi-practice-history', JSON.stringify(state.history));
-    }
+    state.history = savedHistory ? JSON.parse(savedHistory) : [];
     renderHistoryUI();
     
     loadPracticeMode('yiji');
