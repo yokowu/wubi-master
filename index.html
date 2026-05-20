@@ -155,38 +155,88 @@
                     </div>
                 </section>
 
-                <!-- Right Side: Query Tool -->
+                <!-- Right Side: Query Tool & History -->
                 <section class="panel query-panel">
                     <div class="panel-header">
-                        <h2>🔍 五笔查字 / 拆解助手</h2>
+                        <nav class="utility-tabs">
+                            <button class="tab-btn active" id="tab-btn-tools">🔍 查字与错字</button>
+                            <button class="tab-btn" id="tab-btn-history">📈 训练历史</button>
+                        </nav>
                     </div>
-                    <div class="query-container">
-                        <div class="search-box">
-                            <input type="text" id="query-input" placeholder="输入任意汉字查编码与拆分（如：结）" maxlength="10">
-                            <button id="query-btn" class="btn-primary">查询</button>
+                    
+                    <!-- Content Tab 1: Tools (Query & Wrong Ledger) -->
+                    <div class="utility-tab-content" id="content-tools">
+                        <div class="query-container">
+                            <div class="search-box">
+                                <input type="text" id="query-input" placeholder="输入任意汉字查编码与拆分（如：结）" maxlength="10">
+                                <button id="query-btn" class="btn-primary">查询</button>
+                            </div>
+                            
+                            <div class="query-result" id="query-result">
+                                <div class="query-empty">
+                                    <p>输入汉字，即可实时查询其五笔86编码、拼音、以及在键盘上的拆分按键路径。</p>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="query-result" id="query-result">
-                            <div class="query-empty">
-                                <p>输入汉字，即可实时查询其五笔86编码、拼音、以及在键盘上的拆分按键路径。</p>
+
+                        <!-- Wrong Character Ledger -->
+                        <div class="wrong-list-container">
+                            <h3>❌ 本次错字本</h3>
+                            <div class="wrong-chars" id="wrong-chars-list">
+                                <!-- Wrong characters will be listed here -->
+                                <span class="empty-text">暂无错字，保持下去！</span>
+                            </div>
+                            <div class="wrong-actions" id="wrong-actions" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+                                <button id="export-anki-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">导出 Anki</button>
+                                <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
+                                <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Wrong Character Ledger -->
-                    <div class="wrong-list-container">
-                        <h3>❌ 本次错字本</h3>
-                        <div class="wrong-chars" id="wrong-chars-list">
-                            <!-- Wrong characters will be listed here -->
-                            <span class="empty-text">暂无错字，保持下去！</span>
+                    <!-- Content Tab 2: History (Training Logs) -->
+                    <div class="utility-tab-content" id="content-history" style="display: none;">
+                        <div class="history-summary-grid">
+                            <div class="history-stat-card">
+                                <div class="history-stat-val" id="hist-total-rounds">0</div>
+                                <div class="history-stat-lbl">总次数</div>
+                            </div>
+                            <div class="history-stat-card">
+                                <div class="history-stat-val" id="hist-avg-wpm">0</div>
+                                <div class="history-stat-lbl">平均WPM</div>
+                            </div>
+                            <div class="history-stat-card">
+                                <div class="history-stat-val" id="hist-avg-acc">100%</div>
+                                <div class="history-stat-lbl">平均准确率</div>
+                            </div>
                         </div>
-                        <div class="wrong-actions" id="wrong-actions" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                            <button id="export-anki-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">导出 Anki</button>
-                            <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
-                            <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
+                        
+                        <div class="history-list-wrapper">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>模式</th>
+                                        <th>速度</th>
+                                        <th>准确率</th>
+                                        <th>错字</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <tr>
+                                        <td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="history-actions">
+                            <button id="export-history-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px;">导出 CSV</button>
+                            <button id="clear-history-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空历史</button>
                         </div>
                     </div>
                 </section>
+
             </main>
 
             <!-- Bottom: Keyboard Display -->

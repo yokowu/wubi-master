@@ -82,7 +82,8 @@ let state = {
     showHintActive: false,
     
     // Theme
-    theme: 'dark'
+    theme: 'dark',
+    history: []
 };
 
 // Elements
@@ -130,7 +131,19 @@ const elements = {
     reportFeedback: null,
     reportRetryWrongBtn: null,
     reportRestartBtn: null,
-    reportCloseBtn: null
+    reportCloseBtn: null,
+    
+    // History Panel Elements
+    tabBtnTools: null,
+    tabBtnHistory: null,
+    contentTools: null,
+    contentHistory: null,
+    histTotalRounds: null,
+    histAvgWpm: null,
+    histAvgAcc: null,
+    historyTableBody: null,
+    exportHistoryBtn: null,
+    clearHistoryBtn: null
 };
 
 // Initialize DOM bindings and setup application
@@ -143,6 +156,11 @@ function init() {
     const savedWrong = localStorage.getItem('wubi-wrong-chars');
     state.wrongCharsLedger = new Set(savedWrong ? JSON.parse(savedWrong) : []);
     renderWrongLedgerUI();
+    
+    // Load practice history
+    const savedHistory = localStorage.getItem('wubi-practice-history');
+    state.history = savedHistory ? JSON.parse(savedHistory) : [];
+    renderHistoryUI();
     
     loadPracticeMode('yiji');
     loadTheme();
@@ -194,6 +212,18 @@ function bindDOMElements() {
     elements.reportRetryWrongBtn = document.getElementById('report-retry-wrong-btn');
     elements.reportRestartBtn = document.getElementById('report-restart-btn');
     elements.reportCloseBtn = document.getElementById('report-close-btn');
+    
+    // Bind History elements
+    elements.tabBtnTools = document.getElementById('tab-btn-tools');
+    elements.tabBtnHistory = document.getElementById('tab-btn-history');
+    elements.contentTools = document.getElementById('content-tools');
+    elements.contentHistory = document.getElementById('content-history');
+    elements.histTotalRounds = document.getElementById('hist-total-rounds');
+    elements.histAvgWpm = document.getElementById('hist-avg-wpm');
+    elements.histAvgAcc = document.getElementById('hist-avg-acc');
+    elements.historyTableBody = document.getElementById('history-table-body');
+    elements.exportHistoryBtn = document.getElementById('export-history-btn');
+    elements.clearHistoryBtn = document.getElementById('clear-history-btn');
 }
 
 // --------------------------------------------------------------------------
@@ -843,16 +873,22 @@ function trackWrongKey(typed, correct) {
 }
 
 function showDiagnosticReport() {
+    // Record current practice session in history
+    recordPracticeSession();
+
     // Hide normal practice UI
-    const displayContainer = document.querySelector('.display-container');
+    const textFlow = document.getElementById('practice-text-flow');
+    const activeDetail = document.getElementById('active-char-detail');
     const rootsGuide = document.getElementById('roots-guide');
     const inputContainer = document.querySelector('.input-container');
     const practiceInstructions = document.querySelector('.practice-instructions');
     
-    if (displayContainer) displayContainer.style.display = 'none';
+    if (textFlow) textFlow.style.display = 'none';
+    if (activeDetail) activeDetail.style.display = 'none';
     if (rootsGuide) rootsGuide.style.display = 'none';
     if (inputContainer) inputContainer.style.display = 'none';
     if (practiceInstructions) practiceInstructions.style.display = 'none';
+
     
     // Calculate values
     const elapsedMin = state.startTime ? (new Date() - state.startTime) / 1000 / 60 : 0.1;
@@ -939,12 +975,14 @@ function hideDiagnosticReport() {
     if (elements.diagnosticReport) elements.diagnosticReport.style.display = 'none';
     
     // Show normal practice UI
-    const displayContainer = document.querySelector('.display-container');
+    const textFlow = document.getElementById('practice-text-flow');
+    const activeDetail = document.getElementById('active-char-detail');
     const rootsGuide = document.getElementById('roots-guide');
     const inputContainer = document.querySelector('.input-container');
     const practiceInstructions = document.querySelector('.practice-instructions');
     
-    if (displayContainer) displayContainer.style.display = 'flex';
+    if (textFlow) textFlow.style.display = 'flex';
+    if (activeDetail) activeDetail.style.display = 'flex';
     if (rootsGuide) rootsGuide.style.display = 'flex';
     if (inputContainer) inputContainer.style.display = 'block';
     if (practiceInstructions) practiceInstructions.style.display = 'block';
@@ -1090,6 +1128,167 @@ function setupEventListeners() {
         document.documentElement.setAttribute('data-theme', nextTheme);
         localStorage.setItem('wubi-theme', nextTheme);
     });
+
+    // Utility tab switcher logic
+    if (elements.tabBtnTools && elements.tabBtnHistory) {
+        elements.tabBtnTools.addEventListener('click', () => {
+            elements.tabBtnTools.classList.add('active');
+            elements.tabBtnHistory.classList.remove('active');
+            elements.contentTools.style.display = 'flex';
+            elements.contentHistory.style.display = 'none';
+        });
+        
+        elements.tabBtnHistory.addEventListener('click', () => {
+            elements.tabBtnHistory.classList.add('active');
+            elements.tabBtnTools.classList.remove('active');
+            elements.contentTools.style.display = 'none';
+            elements.contentHistory.style.display = 'flex';
+            renderHistoryUI();
+        });
+    }
+
+    // History action buttons
+    if (elements.exportHistoryBtn) {
+        elements.exportHistoryBtn.addEventListener('click', exportHistoryToCSV);
+    }
+    if (elements.clearHistoryBtn) {
+        elements.clearHistoryBtn.addEventListener('click', clearHistory);
+    }
+}
+
+// --------------------------------------------------------------------------
+// Practice History Ledger & CSV Export
+// --------------------------------------------------------------------------
+function recordPracticeSession() {
+    if (state.queue.length === 0 || !state.startTime) return;
+    
+    const elapsedMin = (new Date() - state.startTime) / 1000 / 60;
+    const wpmVal = elapsedMin > 0 ? Math.round(state.correctTyped / elapsedMin) : 0;
+    const acc = state.totalTyped > 0 ? Math.round((state.correctTyped / state.totalTyped) * 100) : 100;
+    const elapsedSec = Math.round((new Date() - state.startTime) / 1000);
+    
+    const MODE_LABELS = {
+        'yiji': '一级简码',
+        'erji': '二级简码',
+        'highfreq': '常用高频',
+        'hard': '难字专项',
+        'custom': '自由练习',
+        'wrong-review': '错字复习'
+    };
+    
+    const record = {
+        id: Date.now(),
+        date: new Date().toLocaleString('zh-CN', { hour12: false }),
+        mode: MODE_LABELS[state.mode] || state.mode,
+        wpm: wpmVal,
+        accuracy: acc,
+        wrongCount: state.wrongTyped,
+        duration: elapsedSec
+    };
+    
+    state.history.unshift(record);
+    
+    // Cap at 500 records
+    if (state.history.length > 500) {
+        state.history = state.history.slice(0, 500);
+    }
+    
+    localStorage.setItem('wubi-practice-history', JSON.stringify(state.history));
+    renderHistoryUI();
+}
+
+function renderHistoryUI() {
+    if (!elements.historyTableBody) return;
+    
+    const hist = state.history;
+    const total = hist.length;
+    let avgWpm = 0;
+    let avgAcc = 0;
+    
+    if (total > 0) {
+        const sumWpm = hist.reduce((sum, item) => sum + item.wpm, 0);
+        const sumAcc = hist.reduce((sum, item) => sum + item.accuracy, 0);
+        avgWpm = Math.round(sumWpm / total);
+        avgAcc = Math.round(sumAcc / total);
+    }
+    
+    if (elements.histTotalRounds) elements.histTotalRounds.textContent = total;
+    if (elements.histAvgWpm) elements.histAvgWpm.textContent = avgWpm;
+    if (elements.histAvgAcc) elements.histAvgAcc.textContent = `${avgAcc}%`;
+    
+    elements.historyTableBody.innerHTML = '';
+    
+    if (total === 0) {
+        elements.historyTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    const displayRecords = hist.slice(0, 50);
+    displayRecords.forEach(record => {
+        const tr = document.createElement('tr');
+        
+        let displayDate = record.date;
+        try {
+            const parts = record.date.split(' ');
+            if (parts.length >= 2) {
+                const dateParts = parts[0].split('/');
+                const timeParts = parts[1].split(':');
+                if (dateParts.length >= 3 && timeParts.length >= 2) {
+                    const month = dateParts[1].padStart(2, '0');
+                    const day = dateParts[2].padStart(2, '0');
+                    const hh = timeParts[0].padStart(2, '0');
+                    const mm = timeParts[1].padStart(2, '0');
+                    displayDate = `${month}-${day} ${hh}:${mm}`;
+                }
+            }
+        } catch (e) {
+            // fallback
+        }
+        
+        tr.innerHTML = `
+            <td>${displayDate}</td>
+            <td>${record.mode}</td>
+            <td><strong>${record.wpm}</strong></td>
+            <td>${record.accuracy}%</td>
+            <td>${record.wrongCount}</td>
+        `;
+        elements.historyTableBody.appendChild(tr);
+    });
+}
+
+function clearHistory() {
+    if (confirm('确定要清空所有的训练历史记录吗？此操作无法撤销。')) {
+        state.history = [];
+        localStorage.removeItem('wubi-practice-history');
+        renderHistoryUI();
+    }
+}
+
+function exportHistoryToCSV() {
+    if (state.history.length === 0) {
+        alert('暂无历史记录可导出！');
+        return;
+    }
+    
+    let csvContent = '\uFEFF'; // UTF-8 BOM
+    csvContent += '时间,练习模式,打字速度(WPM),准确率(%),错字数,练习时长(秒)\n';
+    
+    state.history.forEach(r => {
+        csvContent += `"${r.date}","${r.mode}",${r.wpm},${r.accuracy},${r.wrongCount},${r.duration}\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `wubi_practice_history_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function loadTheme() {

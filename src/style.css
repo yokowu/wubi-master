@@ -1179,3 +1179,117 @@ input:checked + .slider:before {
     transform: rotate(-180deg);
 }
 
+/* Utility Tabs & Content Styles */
+.utility-tabs {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.utility-tabs .tab-btn {
+    flex: 1;
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+.utility-tab-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Content Tab 1 specifically retains flex structure */
+#content-tools {
+    display: flex;
+    flex-direction: column;
+}
+
+/* History Tab Specific styling with proper padding matching the panel */
+#content-history {
+    padding: 24px 28px;
+    gap: 16px;
+    overflow: hidden;
+}
+
+/* History Summary Grid */
+.history-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.history-stat-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 8px;
+    text-align: center;
+    background: var(--bg-panel);
+}
+
+.history-stat-val {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.history-stat-lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* History List Table Wrapper */
+.history-list-wrapper {
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-panel);
+    overflow-y: auto;
+    min-height: 200px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    text-align: left;
+}
+
+.history-table th, .history-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color-muted);
+}
+
+.history-table th {
+    background: var(--bg-panel);
+    color: var(--text-secondary);
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-table td {
+    color: var(--text-primary);
+}
+
+.history-table tr:last-child td {
+    border-bottom: none;
+}
+
+.empty-history-text {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 40px 10px;
+    font-style: italic;
+}
+
+/* History Actions */
+.history-actions {
+    display: flex;
+    gap: 8px;
+}
+
+
