@@ -1154,6 +1154,14 @@ function setupEventListeners() {
     if (elements.clearHistoryBtn) {
         elements.clearHistoryBtn.addEventListener('click', clearHistory);
     }
+    
+    // Chart mode filter change
+    const chartFilter = document.getElementById('chart-mode-filter');
+    if (chartFilter) {
+        chartFilter.addEventListener('change', () => {
+            renderTrendChart();
+        });
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -1298,9 +1306,18 @@ function renderTrendChart() {
     const chartContainer = document.getElementById('history-chart-container');
     if (!chartContainer) return;
     
-    const hist = state.history.slice(0, 10).reverse(); // Last 10 sessions chronologically
+    // Get mode filter select value
+    const filterEl = document.getElementById('chart-mode-filter');
+    const selectedMode = filterEl ? filterEl.value : '全部';
+    
+    let filteredHist = state.history;
+    if (selectedMode !== '全部') {
+        filteredHist = state.history.filter(item => item.mode === selectedMode);
+    }
+    
+    const hist = filteredHist.slice(0, 10).reverse(); // Last 10 sessions of this category
     if (hist.length < 2) {
-        chartContainer.innerHTML = '<div class="chart-empty">需完成至少 2 次练习以绘制速度走势图</div>';
+        chartContainer.innerHTML = `<div class="chart-empty">该模式下需完成至少 2 次练习以绘制速度走势图</div>`;
         return;
     }
     
@@ -1309,7 +1326,7 @@ function renderTrendChart() {
     const paddingLeft = 32;
     const paddingRight = 16;
     const paddingTop = 20;
-    const paddingBottom = 16;
+    const paddingBottom = 24; // Room for mode labels at the bottom
     
     const wpms = hist.map(h => h.wpm);
     const maxWpm = Math.max(...wpms, 40);
@@ -1342,7 +1359,7 @@ function renderTrendChart() {
         `;
     }
     
-    // Dots and text WPM labels
+    // Dots, WPM value labels, and short mode labels at bottom
     let dots = '';
     let labels = '';
     points.forEach((p, idx) => {
@@ -1350,6 +1367,10 @@ function renderTrendChart() {
         
         // Show WPM value above dot
         labels += `<text x="${p.x}" y="${p.y - 8}" font-size="7" font-weight="700" fill="var(--text-primary)" text-anchor="middle" font-family="monospace">${p.wpm}</text>`;
+        
+        // Show short mode label under X-axis (e.g. "一级", "二级", "高频", "难字")
+        const shortMode = p.mode.substring(0, 2);
+        labels += `<text x="${p.x}" y="${height - 6}" font-size="8" fill="var(--text-muted)" text-anchor="middle">${shortMode}</text>`;
     });
     
     const svgContent = `
@@ -1363,7 +1384,7 @@ function renderTrendChart() {
             <!-- Data Dots -->
             ${dots}
             
-            <!-- Value Labels -->
+            <!-- Value Labels & X Labels -->
             ${labels}
         </svg>
     `;
