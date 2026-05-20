@@ -1154,14 +1154,6 @@ function setupEventListeners() {
     if (elements.clearHistoryBtn) {
         elements.clearHistoryBtn.addEventListener('click', clearHistory);
     }
-    
-    // Chart mode filter change
-    const chartFilter = document.getElementById('chart-mode-filter');
-    if (chartFilter) {
-        chartFilter.addEventListener('change', () => {
-            renderTrendChart();
-        });
-    }
 }
 
 // --------------------------------------------------------------------------
@@ -1306,50 +1298,40 @@ function renderTrendChart() {
     const chartContainer = document.getElementById('history-chart-container');
     if (!chartContainer) return;
     
-    // Get mode filter select value
-    const filterEl = document.getElementById('chart-mode-filter');
-    const selectedMode = filterEl ? filterEl.value : '全部';
+    // Group history records by mode
+    const modeGroups = {};
+    const modesList = ['一级简码', '二级简码', '常用高频', '难字专项', '错字复习', '自由练习'];
     
-    let filteredHist = state.history;
-    if (selectedMode !== '全部') {
-        filteredHist = state.history.filter(item => item.mode === selectedMode);
-    }
+    modesList.forEach(m => {
+        modeGroups[m] = state.history.filter(item => item.mode === m).slice(0, 5).reverse();
+    });
     
-    const hist = filteredHist.slice(0, 10).reverse(); // Last 10 sessions of this category
-    if (hist.length < 2) {
-        chartContainer.innerHTML = `<div class="chart-empty">该模式下需完成至少 2 次练习以绘制速度走势图</div>`;
+    // Determine which modes have enough data (at least 2 attempts) to draw a line
+    const activeModes = modesList.filter(m => modeGroups[m].length >= 2);
+    if (activeModes.length === 0) {
+        chartContainer.innerHTML = '<div class="chart-empty">需在任意模式下完成至少 2 次练习以绘制速度走势图</div>';
         return;
     }
     
     const width = 360;
-    const height = 110;
+    const height = 120;
     const paddingLeft = 32;
     const paddingRight = 16;
-    const paddingTop = 20;
-    const paddingBottom = 24; // Room for mode labels at the bottom
+    const paddingTop = 26;
+    const paddingBottom = 20;
     
-    const wpms = hist.map(h => h.wpm);
-    const maxWpm = Math.max(...wpms, 40);
-    const minWpm = Math.min(...wpms, 0);
+    // Find absolute WPM range across all active modes
+    let allWpms = [];
+    activeModes.forEach(m => {
+        allWpms.push(...modeGroups[m].map(h => h.wpm));
+    });
+    const maxWpm = Math.max(...allWpms, 40);
+    const minWpm = Math.min(...allWpms, 0);
     const rangeWpm = maxWpm - minWpm || 10;
     
-    // Calculate SVG coordinate points
-    const points = hist.map((item, index) => {
-        const x = paddingLeft + (index * (width - paddingLeft - paddingRight) / (hist.length - 1));
-        const y = height - paddingBottom - ((item.wpm - minWpm) * (height - paddingTop - paddingBottom) / rangeWpm);
-        return { x, y, wpm: item.wpm, mode: item.mode };
-    });
-    
-    // Build trend line path
-    let pathD = '';
-    points.forEach((p, idx) => {
-        if (idx === 0) pathD += `M ${p.x} ${p.y}`;
-        else pathD += ` L ${p.x} ${p.y}`;
-    });
-    
-    // Grid lines and Y-axis scale
+    // Draw Y-axis grid lines and labels
     let gridLines = '';
-    const gridCount = 2; // 3 lines total
+    const gridCount = 2;
     for (let i = 0; i <= gridCount; i++) {
         const y = paddingTop + (i * (height - paddingTop - paddingBottom) / gridCount);
         const wpmVal = Math.round(maxWpm - (i * rangeWpm / gridCount));
@@ -1359,37 +1341,112 @@ function renderTrendChart() {
         `;
     }
     
-    // Dots, WPM value labels, and short mode labels at bottom
-    let dots = '';
-    let labels = '';
-    points.forEach((p, idx) => {
-        dots += `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--bg-panel)" stroke="var(--text-primary)" stroke-width="1.5" class="chart-dot"/>`;
+    // Draw X-axis labels (Session 1 to 5)
+    let xLabels = '';
+    const maxPoints = 5;
+    for (let i = 0; i < maxPoints; i++) {
+        const x = paddingLeft + (i * (width - paddingLeft - paddingRight) / (maxPoints - 1));
+        xLabels += `<text x="${x}" y="${height - 4}" font-size="8" fill="var(--text-muted)" text-anchor="middle">第${i+1}次</text>`;
+    }
+    
+    // Visual styling map for modes
+    const CHART_CONFIG = {
+        '一级简码': { color: 'var(--text-primary)', strokeDash: 'none', marker: 'circle' },
+        '二级简码': { color: '#555555', strokeDash: '4,3', marker: 'square' },
+        '常用高频': { color: '#777777', strokeDash: 'none', marker: 'triangle' },
+        '难字专项': { color: '#999999', strokeDash: '1,3', marker: 'diamond' },
+        '错字复习': { color: '#b33939', strokeDash: 'none', marker: 'cross' },
+        '自由练习': { color: '#cccccc', strokeDash: '4,3', marker: 'circle' }
+    };
+    
+    let linesSvg = '';
+    let markersSvg = '';
+    
+    activeModes.forEach(m => {
+        const data = modeGroups[m];
+        const config = CHART_CONFIG[m] || { color: '#888', strokeDash: 'none', marker: 'circle' };
         
-        // Show WPM value above dot
-        labels += `<text x="${p.x}" y="${p.y - 8}" font-size="7" font-weight="700" fill="var(--text-primary)" text-anchor="middle" font-family="monospace">${p.wpm}</text>`;
+        // Map WPM data to SVG coordinate points
+        const points = data.map((item, index) => {
+            const x = paddingLeft + (index * (width - paddingLeft - paddingRight) / (maxPoints - 1));
+            const y = height - paddingBottom - ((item.wpm - minWpm) * (height - paddingTop - paddingBottom) / rangeWpm);
+            return { x, y, wpm: item.wpm, date: item.date };
+        });
         
-        // Show short mode label under X-axis (e.g. "一级", "二级", "高频", "难字")
-        const shortMode = p.mode.substring(0, 2);
-        labels += `<text x="${p.x}" y="${height - 6}" font-size="8" fill="var(--text-muted)" text-anchor="middle">${shortMode}</text>`;
+        // Construct SVG line path
+        let pathD = '';
+        points.forEach((p, idx) => {
+            if (idx === 0) pathD += `M ${p.x} ${p.y}`;
+            else pathD += ` L ${p.x} ${p.y}`;
+        });
+        
+        linesSvg += `
+            <path d="${pathD}" fill="none" stroke="${config.color}" stroke-width="1.5" stroke-dasharray="${config.strokeDash}" stroke-linecap="round" stroke-linejoin="round"/>
+        `;
+        
+        // Construct markers and overlay transparent hover zones
+        points.forEach((p, idx) => {
+            let markerShape = '';
+            const shortDate = p.date.includes(' ') ? p.date.split(' ')[0] : p.date;
+            const tooltipMsg = `${m} (第${idx+1}次): ${p.wpm} WPM | ${shortDate}`;
+            
+            if (config.marker === 'circle') {
+                markerShape = `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--bg-panel)" stroke="${config.color}" stroke-width="1.5"/>`;
+            } else if (config.marker === 'square') {
+                markerShape = `<rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="var(--bg-panel)" stroke="${config.color}" stroke-width="1.5"/>`;
+            } else if (config.marker === 'triangle') {
+                markerShape = `<polygon points="${p.x},${p.y - 3.5} ${p.x + 3},${p.y + 2.5} ${p.x - 3},${p.y + 2.5}" fill="var(--bg-panel)" stroke="${config.color}" stroke-width="1.5"/>`;
+            } else if (config.marker === 'diamond') {
+                markerShape = `<polygon points="${p.x},${p.y - 4} ${p.x + 4},${p.y} ${p.x},${p.y + 4} ${p.x - 4},${p.y}" fill="var(--bg-panel)" stroke="${config.color}" stroke-width="1.5"/>`;
+            } else {
+                // Cross / Plus style
+                markerShape = `
+                    <line x1="${p.x - 2.5}" y1="${p.y - 2.5}" x2="${p.x + 2.5}" y2="${p.y + 2.5}" stroke="${config.color}" stroke-width="1.5"/>
+                    <line x1="${p.x - 2.5}" y1="${p.y + 2.5}" x2="${p.x + 2.5}" y2="${p.y - 2.5}" stroke="${config.color}" stroke-width="1.5"/>
+                `;
+            }
+            
+            markersSvg += `
+                <g onmouseenter="showChartTooltip('${tooltipMsg}')" onmouseleave="hideChartTooltip()">
+                    ${markerShape}
+                    <circle cx="${p.x}" cy="${p.y}" r="8" fill="transparent" style="cursor: pointer;"/>
+                </g>
+            `;
+        });
     });
     
     const svgContent = `
         <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow: visible;">
-            <!-- Grid Lines & Y Axis Labels -->
+            <!-- Grid Lines -->
             ${gridLines}
             
-            <!-- Trend Line -->
-            <path d="${pathD}" fill="none" stroke="var(--text-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- X Axis Labels -->
+            ${xLabels}
             
-            <!-- Data Dots -->
-            ${dots}
+            <!-- Tooltip Text Node -->
+            <text id="chart-tooltip" x="${width / 2}" y="12" font-size="9" font-weight="700" fill="var(--text-primary)" text-anchor="middle" font-family="monospace"></text>
             
-            <!-- Value Labels & X Labels -->
-            ${labels}
+            <!-- Lines -->
+            ${linesSvg}
+            
+            <!-- Markers -->
+            ${markersSvg}
         </svg>
     `;
     
     chartContainer.innerHTML = svgContent;
+    
+    // Bind tooltip functions to window object
+    if (!window.showChartTooltip) {
+        window.showChartTooltip = function(text) {
+            const el = document.getElementById('chart-tooltip');
+            if (el) el.textContent = text;
+        };
+        window.hideChartTooltip = function() {
+            const el = document.getElementById('chart-tooltip');
+            if (el) el.textContent = '';
+        };
+    }
 }
 
 function loadTheme() {

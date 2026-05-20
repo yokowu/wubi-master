@@ -213,18 +213,17 @@
                         
                         <div class="history-chart-card">
                             <div class="chart-header-row">
-                                <span class="chart-title">📈 WPM 速度走势</span>
-                                <select id="chart-mode-filter" class="chart-filter">
-                                    <option value="全部">全部模式</option>
-                                    <option value="一级简码">一级简码</option>
-                                    <option value="二级简码">二级简码</option>
-                                    <option value="常用高频">常用高频</option>
-                                    <option value="难字专项">难字专项</option>
-                                    <option value="自由练习">自由练习</option>
-                                    <option value="错字复习">错字复习</option>
-                                </select>
+                                <span class="chart-title">📈 WPM 速度走势 (各模式最近5次)</span>
                             </div>
                             <div id="history-chart-container" class="chart-container"></div>
+                            <div class="chart-legend">
+                                <div class="legend-item"><span class="legend-color" style="background: var(--text-primary);"></span>一级</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #555555; border-bottom: 1.5px dashed #fff;"></span>二级</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #777777;"></span>高频</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #999999; border-bottom: 1.5px dotted #fff;"></span>难字</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #b33939;"></span>错字</div>
+                                <div class="legend-item"><span class="legend-color" style="background: #cccccc; border-bottom: 1.5px dashed #fff;"></span>自由</div>
+                            </div>
                         </div>
                         
                         <div class="history-list-wrapper">
