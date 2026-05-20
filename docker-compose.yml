@@ -1,0 +1,9 @@
+services:
+  wubi-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wubi-master
+    ports:
+      - "8080:80"
+    restart: always
