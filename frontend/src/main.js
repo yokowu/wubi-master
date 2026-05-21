@@ -151,6 +151,60 @@ const elements = {
     clearHistoryBtn: null
 };
 
+// Load data from Express backend or fall back to localStorage
+function loadPracticeHistory() {
+    fetch('/api/records')
+        .then(res => {
+            if (!res.ok) throw new Error('API unreachable');
+            return res.json();
+        })
+        .then(data => {
+            state.history = data.map(r => ({
+                id: r.id,
+                date: new Date(r.timestamp).toLocaleString('zh-CN', { hour12: false }),
+                mode: r.mode,
+                wpm: r.wpm,
+                accuracy: r.accuracy,
+                wrongCount: r.wrong_count,
+                duration: r.duration
+            }));
+            renderHistoryUI();
+        })
+        .catch(err => {
+            console.warn("Backend API /api/records unavailable, falling back to localStorage", err);
+            const savedHistory = localStorage.getItem('wubi-practice-history');
+            state.history = savedHistory ? JSON.parse(savedHistory) : [];
+            renderHistoryUI();
+        });
+}
+
+function loadWeaknessStats() {
+    fetch('/api/weakness')
+        .then(res => {
+            if (!res.ok) throw new Error('API unreachable');
+            return res.json();
+        })
+        .then(data => {
+            state.accumulatedWrongZones = data;
+            renderWeaknessAnalysisUI();
+        })
+        .catch(err => {
+            console.warn("Backend API /api/weakness unavailable, falling back to localStorage", err);
+            const savedErrors = localStorage.getItem('wubi-accumulated-errors');
+            if (savedErrors) {
+                try {
+                    const parsed = JSON.parse(savedErrors);
+                    if (parsed && parsed.zones) {
+                        state.accumulatedWrongZones = parsed.zones;
+                    }
+                } catch(e) {
+                    console.error("Failed to parse local accumulated errors", e);
+                }
+            }
+            renderWeaknessAnalysisUI();
+        });
+}
+
 // Initialize DOM bindings and setup application
 function init() {
     bindDOMElements();
@@ -162,24 +216,9 @@ function init() {
     state.wrongCharsLedger = new Set(savedWrong ? JSON.parse(savedWrong) : []);
     renderWrongLedgerUI();
     
-    // Load practice history
-    const savedHistory = localStorage.getItem('wubi-practice-history');
-    state.history = savedHistory ? JSON.parse(savedHistory) : [];
-    renderHistoryUI();
-    
-    // Load accumulated errors for weakness analysis
-    const savedErrors = localStorage.getItem('wubi-accumulated-errors');
-    if (savedErrors) {
-        try {
-            const parsed = JSON.parse(savedErrors);
-            if (parsed && parsed.zones) {
-                state.accumulatedWrongZones = parsed.zones;
-            }
-        } catch(e) {
-            console.error("Failed to load accumulated errors", e);
-        }
-    }
-    renderWeaknessAnalysisUI();
+    // Load practice history & weakness stats from DB
+    loadPracticeHistory();
+    loadWeaknessStats();
     
     loadPracticeMode('yiji');
     loadTheme();
@@ -204,6 +243,7 @@ function bindDOMElements() {
     elements.hintPinyin = document.getElementById('hint-pinyin');
     elements.hintWubi = document.getElementById('hint-wubi');
     elements.rootsGuide = document.getElementById('roots-guide');
+    elements.practiceDecompContainer = document.getElementById('practice-decomp-container');
     
     elements.practiceInput = document.getElementById('practice-input');
     elements.inputOverlay = document.getElementById('input-overlay');
@@ -497,10 +537,28 @@ function updatePracticeUI() {
         elements.hintWubi.textContent = displayCode;
         
         renderRootsGuide(currentWord);
+        
+        const activeChar = currentWord.char;
+        fetch(`/api/wubi/${activeChar}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Not found');
+                return res.json();
+            })
+            .then(data => {
+                const wordNow = state.queue[state.currentIndex];
+                if (wordNow && wordNow.char === activeChar && state.showHintActive) {
+                    renderHanziWriterDecomposition(elements.practiceDecompContainer, activeChar, data.code, data.segments, data.units);
+                }
+            })
+            .catch(err => {
+                console.log("No stroke data for active char:", activeChar);
+                elements.practiceDecompContainer.innerHTML = '';
+            });
     } else {
         elements.hintPinyin.style.opacity = '0';
         elements.hintWubi.style.opacity = '0';
         elements.rootsGuide.innerHTML = '';
+        elements.practiceDecompContainer.innerHTML = '';
     }
     
     elements.progress.textContent = `${state.currentIndex}/${state.queue.length}`;
@@ -854,6 +912,23 @@ function performQuery() {
             `;
             
             card.innerHTML = resultHTML;
+            
+            const decompWrapper = document.createElement('div');
+            decompWrapper.style.marginTop = '10px';
+            card.appendChild(decompWrapper);
+            
+            fetch(`/api/wubi/${char}`)
+                .then(res => {
+                    if (!res.ok) throw new Error('Not found in DB');
+                    return res.json();
+                })
+                .then(data => {
+                    renderHanziWriterDecomposition(decompWrapper, char, data.code, data.segments, data.units);
+                })
+                .catch(err => {
+                    console.log("No stroke segment data for character:", char);
+                });
+
             triggerVisualKeyboardSequence(info.w);
             
         } else {
@@ -1091,13 +1166,23 @@ function accumulatePermanentError(key) {
     const zone = KEY_TO_ZONE[key];
     if (!zone) return;
     
+    // Update local state and UI
     state.accumulatedWrongZones[zone] = (state.accumulatedWrongZones[zone] || 0) + 1;
-    
-    const savedData = {
-        zones: state.accumulatedWrongZones
-    };
-    localStorage.setItem('wubi-accumulated-errors', JSON.stringify(savedData));
     renderWeaknessAnalysisUI();
+    
+    // Sync to PostgreSQL database
+    fetch('/api/weakness', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zone, count: 1 })
+    })
+    .catch(err => {
+        console.warn("Failed to sync weakness to Express server, keeping local storage", err);
+        const savedData = {
+            zones: state.accumulatedWrongZones
+        };
+        localStorage.setItem('wubi-accumulated-errors', JSON.stringify(savedData));
+    });
 }
 
 function showDiagnosticReport() {
@@ -1424,15 +1509,33 @@ function recordPracticeSession() {
         duration: elapsedSec
     };
     
+    // Optimistically update local state and UI
     state.history.unshift(record);
-    
-    // Cap at 500 records
     if (state.history.length > 500) {
         state.history = state.history.slice(0, 500);
     }
-    
-    localStorage.setItem('wubi-practice-history', JSON.stringify(state.history));
     renderHistoryUI();
+    
+    // Sync to PostgreSQL database
+    fetch('/api/records', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            mode: record.mode,
+            wpm: record.wpm,
+            accuracy: record.accuracy,
+            wrong_count: record.wrongCount,
+            duration: record.duration
+        })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('API unreachable');
+        loadPracticeHistory(); // reload to keep synchronized
+    })
+    .catch(err => {
+        console.warn("Failed to sync record to Express server, keeping local storage", err);
+        localStorage.setItem('wubi-practice-history', JSON.stringify(state.history));
+    });
 }
 
 function renderHistoryUI() {
@@ -1504,8 +1607,19 @@ function renderHistoryUI() {
 function clearHistory() {
     if (confirm('确定要清空所有的训练历史记录吗？此操作无法撤销。')) {
         state.history = [];
-        localStorage.removeItem('wubi-practice-history');
         renderHistoryUI();
+        
+        fetch('/api/records', {
+            method: 'DELETE'
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('API unreachable');
+            loadPracticeHistory(); // reload to keep synchronized
+        })
+        .catch(err => {
+            console.warn("Failed to clear records on backend, clearing locally", err);
+            localStorage.removeItem('wubi-practice-history');
+        });
     }
 }
 
@@ -1692,6 +1806,133 @@ function renderTrendChart() {
 function loadTheme() {
     const savedTheme = localStorage.getItem('wubi-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+// --------------------------------------------------------------------------
+// HanziWriter Stroke Decomposition Rendering Helpers
+// --------------------------------------------------------------------------
+function renderHanziWriterDecomposition(container, char, code, segments, units) {
+    if (!segments || segments.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">正在加载笔画拆解...</div>';
+    
+    if (typeof HanziWriter === 'undefined') {
+        container.innerHTML = '<div style="font-size: 11px; color: var(--error);">HanziWriter 库未加载</div>';
+        return;
+    }
+    
+    HanziWriter.loadCharacterData(char)
+        .then(charData => {
+            container.innerHTML = '';
+            
+            const title = document.createElement('div');
+            title.className = 'wubi-decomposition-title';
+            title.textContent = '✍️ 笔画拆分图解';
+            container.appendChild(title);
+            
+            const flexContainer = document.createElement('div');
+            flexContainer.className = 'wubi-decomposition-container';
+            container.appendChild(flexContainer);
+
+            const keys = Array.from(code.toLowerCase().replace(/[^a-z]/g, ''));
+            const unitNames = units ? units.trim().split(/\s+/) : [];
+            
+            segments.forEach((strokeIndices, index) => {
+                const key = keys[index] || '';
+                const unitGlyph = unitNames[index] || '';
+                
+                const item = document.createElement('div');
+                item.className = 'decomposition-stroke-item';
+                
+                if (key) {
+                    const badge = document.createElement('div');
+                    badge.className = 'stroke-key-badge';
+                    badge.textContent = key.toUpperCase();
+                    item.appendChild(badge);
+                }
+                
+                const svgWrapper = document.createElement('div');
+                svgWrapper.className = 'stroke-svg-wrapper';
+                item.appendChild(svgWrapper);
+                
+                drawCharacterStrokes(svgWrapper, charData.strokes, strokeIndices);
+                
+                if (unitGlyph && unitGlyph.trim()) {
+                    const radicalName = document.createElement('div');
+                    radicalName.className = 'stroke-radical-name';
+                    radicalName.textContent = unitGlyph.trim();
+                    item.appendChild(radicalName);
+                }
+                
+                flexContainer.appendChild(item);
+            });
+
+            // Append recognition code keys or remaining keys if any
+            if (keys.length > segments.length) {
+                for (let index = segments.length; index < keys.length; index++) {
+                    const key = keys[index];
+                    const unitGlyph = unitNames[index] || '';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'decomposition-stroke-item';
+                    
+                    if (key) {
+                        const badge = document.createElement('div');
+                        badge.className = 'stroke-key-badge';
+                        badge.textContent = key.toUpperCase();
+                        item.appendChild(badge);
+                    }
+                    
+                    const svgWrapper = document.createElement('div');
+                    svgWrapper.className = 'stroke-svg-wrapper';
+                    item.appendChild(svgWrapper);
+                    
+                    // Draw full character in light gray (empty active indices list)
+                    drawCharacterStrokes(svgWrapper, charData.strokes, []);
+                    
+                    if (unitGlyph && unitGlyph.trim()) {
+                        const radicalName = document.createElement('div');
+                        radicalName.className = 'stroke-radical-name';
+                        radicalName.textContent = unitGlyph.trim();
+                        item.appendChild(radicalName);
+                    }
+                    
+                    flexContainer.appendChild(item);
+                }
+            }
+        })
+        .catch(err => {
+            console.warn("Failed to load character data for HanziWriter", err);
+            container.innerHTML = '';
+        });
+}
+
+function drawCharacterStrokes(target, strokes, activeIndices) {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+    
+    const activeColor = '#1a365d'; 
+    const normalColor = document.documentElement.getAttribute('data-theme') === 'dark' ? '#f0ebd9' : '#e5e5e5';
+
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", "0 0 1024 1024");
+    
+    const group = document.createElementNS(SVG_NS, "g");
+    group.setAttribute("transform", "scale(1, -1) translate(0, -1024)");
+    svg.appendChild(group);
+    
+    strokes.forEach((pathData, idx) => {
+        const path = document.createElementNS(SVG_NS, "path");
+        path.setAttribute("d", pathData);
+        path.style.fill = activeIndices.includes(idx) ? activeColor : normalColor;
+        group.appendChild(path);
+    });
+    
+    target.appendChild(svg);
 }
 
 // Initialize when JS loads and DOM is parsed

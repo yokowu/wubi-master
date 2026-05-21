@@ -1,3 +1,17 @@
+@font-face {
+    font-family: "Wubi Units";
+    src: url("/fonts/wubi_86_radicals.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Wubi98 Units";
+    src: url("/fonts/98WB-0.otf") format("opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* ==========================================================================
    Wubi Master - Soft Minimalist Line & Spacious Aesthetic (Light & Airy)
    ========================================================================== */
@@ -419,7 +433,7 @@ body {
 
 /* Visual Roots Guide */
 .roots-visual-guide {
-    display: flex;
+    display: none !important;
     gap: 12px;
     min-height: 44px;
     margin: 8px 0;
@@ -1415,6 +1429,73 @@ input:checked + .slider:before {
     r: 5;
     fill: var(--text-primary);
 }
+
+/* ==========================================================================
+   HanziWriter Visual Stroke Decomposition Styles
+   ========================================================================== */
+
+.wubi-decomposition-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+    margin-bottom: 8px;
+}
+
+.wubi-decomposition-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.decomposition-stroke-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid var(--border-color-muted);
+    background: var(--bg-panel);
+    border-radius: var(--radius-sm);
+    padding: 6px;
+    width: 82px;
+    transition: all var(--transition-fast);
+}
+
+.decomposition-stroke-item:hover {
+    border-color: var(--border-color);
+}
+
+.decomposition-stroke-item .stroke-key-badge {
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 11px;
+    background: var(--kbd-active-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 1px 5px;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.decomposition-stroke-item .stroke-svg-wrapper {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.decomposition-stroke-item .stroke-radical-name {
+    font-family: "Wubi Units", "Wubi98 Units", var(--font-ui), sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
 
 
 
