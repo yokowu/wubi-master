@@ -395,12 +395,16 @@ body {
 }
 
 .active-char-detail {
-    display: none !important;
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 36px;
     gap: 10px;
+}
+
+.active-char-detail.is-visible {
+    display: flex;
 }
 
 .char-hints {
@@ -431,10 +435,14 @@ body {
 
 /* Visual Roots Guide */
 .roots-visual-guide {
-    display: none !important;
+    display: none;
     gap: 12px;
     min-height: 44px;
     margin: 8px 0;
+}
+
+.roots-visual-guide.is-visible {
+    display: flex;
 }
 
 .root-step-card {

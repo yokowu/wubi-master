@@ -16,7 +16,8 @@ import {
     renderHints,
     renderRootsGuide,
     renderProgress,
-    renderInstructions
+    renderInstructions,
+    setHintsVisibility
 } from './render.js';
 import { renderActivePracticeHint, showPracticePlaceholder, restoreDefaultQueryPlaceholder } from '../companion.js';
 import { resetStats, updateStatsUI, updateTimer } from './stats.js';
@@ -107,6 +108,7 @@ export function loadPracticeMode(mode) {
     renderProgress();
     renderInstructions(mode);
 
+    setHintsVisibility(false);
     const word = queue[getState().currentIndex];
     if (word) showPracticePlaceholder(word);
     resetHintTimer();
@@ -212,6 +214,7 @@ function verifySubmission(typedCode) {
             st.showHintActive = false;
         });
         if (overlay) overlay.textContent = '';
+        setHintsVisibility(false);
 
         const next = getState();
         if (next.currentIndex >= next.queue.length) {
@@ -256,6 +259,7 @@ function verifySubmission(typedCode) {
         renderRootsGuide(word, 0);
         renderActivePracticeHint(word);
         highlightNextKey(word, 0);
+        setHintsVisibility(true);
     }
 
     updateStatsUI();
@@ -290,6 +294,7 @@ export function resetHintTimer() {
         renderRootsGuide(word, cur.typedText.length);
         renderActivePracticeHint(word);
         highlightNextKey(word, cur.typedText.length);
+        setHintsVisibility(true);
     }, 1500);
 
     mutate(st => { st.hintTimeout = handle; });

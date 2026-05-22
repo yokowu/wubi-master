@@ -86,6 +86,13 @@ export function renderHints(wordObj) {
     }
 }
 
+export function setHintsVisibility(visible) {
+    const detail = $('active-char-detail');
+    const guide = $('roots-guide');
+    if (detail) detail.classList.toggle('is-visible', visible);
+    if (guide) guide.classList.toggle('is-visible', visible);
+}
+
 export function renderRootsGuide(wordObj, typedLen) {
     const guide = $('roots-guide');
     if (!guide) return;
