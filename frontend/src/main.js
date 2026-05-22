@@ -123,6 +123,7 @@ const elements = {
     
     keyboardWrapper: null,
     toggleKeycaps: null,
+    toggleKeyboardPanel: null,
     mnemonicCard: null,
     
     // Diagnostic Report elements
@@ -220,6 +221,16 @@ function init() {
     
     switchMode('yiji');
     loadTheme();
+    
+    // Load saved keyboard panel visibility
+    const showKeyboard = localStorage.getItem('wubi-show-keyboard') !== 'false';
+    if (elements.toggleKeyboardPanel) {
+        elements.toggleKeyboardPanel.checked = showKeyboard;
+        const footer = document.querySelector('.app-footer');
+        if (footer) {
+            footer.style.display = showKeyboard ? 'block' : 'none';
+        }
+    }
 }
 
 function bindDOMElements() {
@@ -258,6 +269,7 @@ function bindDOMElements() {
     
     elements.keyboardWrapper = document.getElementById('keyboard-wrapper');
     elements.toggleKeycaps = document.getElementById('toggle-keycaps');
+    elements.toggleKeyboardPanel = document.getElementById('toggle-keyboard-panel');
     elements.mnemonicCard = document.getElementById('mnemonic-card');
     
     // Bind Diagnostic elements
@@ -1539,6 +1551,17 @@ function setupEventListeners() {
             el.style.opacity = show ? '1' : '0';
         });
     });
+    
+    if (elements.toggleKeyboardPanel) {
+        elements.toggleKeyboardPanel.addEventListener('change', (e) => {
+            const show = e.target.checked;
+            const footer = document.querySelector('.app-footer');
+            if (footer) {
+                footer.style.display = show ? 'block' : 'none';
+            }
+            localStorage.setItem('wubi-show-keyboard', show ? 'true' : 'false');
+        });
+    }
     
     elements.themeToggle.addEventListener('click', () => {
         const curTheme = document.documentElement.getAttribute('data-theme') || 'light';

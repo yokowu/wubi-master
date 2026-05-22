@@ -22,33 +22,39 @@
                         <p>五笔 86 版刻意练习 & 拆字助手</p>
                     </div>
                 </div>
+
+                <!-- Navigation Bar inline in Header -->
+                <nav class="app-navbar">
+                    <div class="navbar-group">
+                        <span class="navbar-group-label">🎯 练习</span>
+                        <button class="nav-btn active" data-mode="yiji">一级简码</button>
+                        <button class="nav-btn" data-mode="erji">二级简码</button>
+                        <button class="nav-btn" data-mode="highfreq">高频常用</button>
+                        <button class="nav-btn" data-mode="hard">难拆专项</button>
+                        <button class="nav-btn" data-mode="custom">自由练习</button>
+                        <button class="nav-btn" data-mode="wrong-review" id="nav-wrong-review">错字复习</button>
+                        <button class="nav-btn" data-mode="reinforce" id="nav-reinforce">薄弱强化</button>
+                    </div>
+                    <div class="navbar-divider"></div>
+                    <div class="navbar-group">
+                        <span class="navbar-group-label">🔧 工具</span>
+                        <button class="nav-btn" data-mode="query" id="nav-btn-query">🔍 查字</button>
+                        <button class="nav-btn" data-mode="history" id="nav-btn-history">📈 历史</button>
+                    </div>
+                </nav>
+
                 <div class="header-actions">
+                    <label class="toggle-switch keyboard-toggle-wrapper">
+                        <input type="checkbox" id="toggle-keyboard-panel" checked>
+                        <span class="slider"></span>
+                        <span class="toggle-label">⌨️ 字根图</span>
+                    </label>
                     <button id="theme-toggle" class="btn-icon" title="切换主题">🌓</button>
                     <div class="keyboard-layout-info">
                         <span class="badge">Rime 86 极点码表</span>
                     </div>
                 </div>
             </header>
-
-            <!-- Navigation Bar -->
-            <nav class="app-navbar">
-                <div class="navbar-group">
-                    <span class="navbar-group-label">🎯 五笔练习</span>
-                    <button class="nav-btn active" data-mode="yiji">一级简码</button>
-                    <button class="nav-btn" data-mode="erji">二级简码</button>
-                    <button class="nav-btn" data-mode="highfreq">高频常用字</button>
-                    <button class="nav-btn" data-mode="hard">难拆字专项</button>
-                    <button class="nav-btn" data-mode="custom">自由练习</button>
-                    <button class="nav-btn" data-mode="wrong-review" id="nav-wrong-review">错字复习</button>
-                    <button class="nav-btn" data-mode="reinforce" id="nav-reinforce">薄弱区强化</button>
-                </div>
-                <div class="navbar-divider"></div>
-                <div class="navbar-group">
-                    <span class="navbar-group-label">🔧 工具与数据</span>
-                    <button class="nav-btn" data-mode="query" id="nav-btn-query">🔍 五笔查字</button>
-                    <button class="nav-btn" data-mode="history" id="nav-btn-history">📈 训练历史</button>
-                </div>
-            </nav>
 
             <!-- Main Content Grid -->
             <main class="app-main">
