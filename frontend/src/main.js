@@ -863,30 +863,6 @@ function performQuery() {
                         ${info.s !== info.w ? `<span class="pinyin" style="font-size:12px;">简码: <strong style="color:var(--primary)">${info.s}</strong></span>` : ''}
                     </div>
                 </div>
-                <div class="result-row">
-                    <div class="result-row-title">拆字字根路径</div>
-                    <div class="result-roots-list">
-            `;
-            
-            const code = info.w;
-            for (let i = 0; i < code.length; i++) {
-                const k = code[i];
-                const keyConfig = KEY_ROOTS[k];
-                if (keyConfig) {
-                    const matchedSymbol = findMatchingRoot(char, k);
-                    resultHTML += `
-                        <div class="result-root-item">
-                            <span class="key">${k.toUpperCase()}</span>
-                            <span class="symbol">${matchedSymbol}</span>
-                            <span class="formula">${keyConfig.formula}</span>
-                        </div>
-                    `;
-                }
-            }
-            
-            resultHTML += `
-                    </div>
-                </div>
                 <button class="btn-secondary add-to-practice-btn" data-char="${char}" style="margin-top:6px; font-size:12px; padding:6px 12px;">添加到自由练习</button>
             `;
             
@@ -1006,30 +982,6 @@ function renderActivePracticeHint(wordObj) {
                 <span class="pinyin" style="font-size: 12px; color: var(--text-secondary);">拼音: <strong>${info.p || '无'}</strong></span>
                 <span class="wubi-code" style="font-size: 12px; color: var(--text-secondary);">五笔: <strong>${info.w.toUpperCase()}</strong>${shortcutInfo}</span>
                 ${info.s !== info.w ? `<span class="pinyin" style="font-size:12px; color: var(--text-secondary);">简码: <strong style="color:var(--text-primary)">${info.s.toUpperCase()}</strong></span>` : ''}
-            </div>
-        </div>
-        
-        <div class="result-row" style="margin-top: 10px; border-top: 1px solid var(--border-color-muted); padding-top: 10px;">
-            <div class="result-row-title" style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">拆字字根路径</div>
-            <div class="result-roots-list" style="display: flex; gap: 6px; flex-wrap: wrap;">
-    `;
-    
-    const code = info.w;
-    for (let i = 0; i < code.length; i++) {
-        const k = code[i];
-        const keyConfig = KEY_ROOTS[k];
-        if (keyConfig) {
-            const matchedSymbol = findMatchingRoot(char, k);
-            resultHTML += `
-                <div class="result-root-item" style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 4px 8px; display: flex; flex-direction: column; align-items: center; min-width: 40px;">
-                    <span class="key" style="font-family: var(--font-mono); font-weight: 800; font-size: 12px; color: var(--text-primary);">${k.toUpperCase()}</span>
-                    <span class="symbol" style="font-family: 'Wubi Units', 'Wubi98 Units', sans-serif; font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${matchedSymbol}</span>
-                </div>
-            `;
-        }
-    }
-    
-    resultHTML += `
             </div>
         </div>
     `;
