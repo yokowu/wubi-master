@@ -1847,20 +1847,51 @@ function loadTheme() {
 // HanziWriter Stroke Decomposition Rendering Helpers
 // --------------------------------------------------------------------------
 function renderHanziWriterDecomposition(container, char, code, segments, units) {
-    if (!segments || segments.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-    
-    container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">正在加载笔画拆解...</div>';
-    
     if (typeof HanziWriter === 'undefined') {
         container.innerHTML = '<div style="font-size: 11px; color: var(--error);">HanziWriter 库未加载</div>';
         return;
     }
     
+    container.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">正在加载笔画拆解...</div>';
+    
     HanziWriter.loadCharacterData(char)
         .then(charData => {
+            // Dynamic fallback if segments is empty or missing (e.g. "肛")
+            let activeSegments = segments;
+            if (!activeSegments || activeSegments.length === 0) {
+                const cleanCode = code.toLowerCase().replace(/[^a-z]/g, '');
+                const totalStrokes = charData.strokes ? charData.strokes.length : 0;
+                
+                let numRadicals = cleanCode.length;
+                if (cleanCode.length === 3) {
+                    numRadicals = 2; // Last key is recognition code
+                } else if (cleanCode.length === 2) {
+                    numRadicals = 1; // Last key is recognition code
+                }
+                
+                if (numRadicals > 0 && totalStrokes > 0) {
+                    const fallbackSegments = [];
+                    const baseSize = Math.floor(totalStrokes / numRadicals);
+                    const extra = totalStrokes % numRadicals;
+                    
+                    let strokeIdx = 0;
+                    for (let i = 0; i < numRadicals; i++) {
+                        const size = baseSize + (i < extra ? 1 : 0);
+                        const currentSeg = [];
+                        for (let j = 0; j < size; j++) {
+                            currentSeg.push(strokeIdx++);
+                        }
+                        fallbackSegments.push(currentSeg);
+                    }
+                    activeSegments = fallbackSegments;
+                }
+            }
+            
+            if (!activeSegments || activeSegments.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
             container.innerHTML = '';
             
             const title = document.createElement('div');
@@ -1875,7 +1906,7 @@ function renderHanziWriterDecomposition(container, char, code, segments, units) 
             const keys = Array.from(code.toLowerCase().replace(/[^a-z]/g, ''));
             const unitNames = units ? units.trim().split(/\s+/) : [];
             
-            segments.forEach((strokeIndices, index) => {
+            activeSegments.forEach((strokeIndices, index) => {
                 const key = keys[index] || '';
                 const unitGlyph = unitNames[index] || '';
                 
@@ -1906,8 +1937,8 @@ function renderHanziWriterDecomposition(container, char, code, segments, units) 
             });
 
             // Append recognition code keys or remaining keys if any
-            if (keys.length > segments.length) {
-                for (let index = segments.length; index < keys.length; index++) {
+            if (keys.length > activeSegments.length) {
+                for (let index = activeSegments.length; index < keys.length; index++) {
                     const key = keys[index];
                     const unitGlyph = unitNames[index] || '';
                     
