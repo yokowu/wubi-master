@@ -400,9 +400,11 @@ body {
 
 .active-char-detail {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 36px;
+    gap: 10px;
 }
 
 .char-hints {
@@ -1449,6 +1451,7 @@ input:checked + .slider:before {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 6px;
+    justify-content: center;
 }
 
 .decomposition-stroke-item {
