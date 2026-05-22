@@ -485,6 +485,7 @@ function shuffleArray(array) {
 
 function updatePracticeUI() {
     if (state.queue.length === 0) {
+        restoreDefaultQueryPlaceholder();
         if (state.mode === 'custom') {
             elements.practiceTextFlow.innerHTML = '<div class="flow-status">🔍</div>';
             elements.hintPinyin.textContent = '暂无内容';
@@ -527,38 +528,16 @@ function updatePracticeUI() {
     const currentWord = state.queue[state.currentIndex];
     
     if (state.showHintActive) {
-        elements.hintPinyin.style.opacity = '1';
-        elements.hintWubi.style.opacity = '1';
+        // Update values for compatibility with other elements
         elements.hintPinyin.textContent = currentWord.py || '无音';
-        
         const displayCode = currentWord.code !== currentWord.full ? 
             `${currentWord.code.toUpperCase()} [全码: ${currentWord.full.toUpperCase()}]` : 
             currentWord.full.toUpperCase();
         elements.hintWubi.textContent = displayCode;
         
-        renderRootsGuide(currentWord);
-        
-        const activeChar = currentWord.char;
-        fetch(`/api/wubi/${activeChar}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Not found');
-                return res.json();
-            })
-            .then(data => {
-                const wordNow = state.queue[state.currentIndex];
-                if (wordNow && wordNow.char === activeChar && state.showHintActive) {
-                    renderHanziWriterDecomposition(elements.practiceDecompContainer, activeChar, data.code, data.segments, data.units);
-                }
-            })
-            .catch(err => {
-                console.log("No stroke data for active char:", activeChar);
-                elements.practiceDecompContainer.innerHTML = '';
-            });
+        renderActivePracticeHint(currentWord);
     } else {
-        elements.hintPinyin.style.opacity = '0';
-        elements.hintWubi.style.opacity = '0';
-        elements.rootsGuide.innerHTML = '';
-        elements.practiceDecompContainer.innerHTML = '';
+        showPracticePlaceholder(currentWord);
     }
     
     elements.progress.textContent = `${state.currentIndex}/${state.queue.length}`;
@@ -996,6 +975,110 @@ function addCharToCustomPractice(char) {
     elements.practiceInput.focus();
     updatePracticeUI();
     resetHintTimer();
+}
+
+// --------------------------------------------------------------------------
+// Practice Companion Helpers (Right Panel)
+// --------------------------------------------------------------------------
+function renderActivePracticeHint(wordObj) {
+    if (!wordObj) return;
+    const char = wordObj.char;
+    const info = WUBI_DICT[char];
+    if (!info) return;
+    
+    if (!elements.queryResult) return;
+    elements.queryResult.innerHTML = '';
+    
+    const card = document.createElement('div');
+    card.className = 'result-card active-hint-card';
+    card.style.borderLeft = '4px solid var(--text-primary)';
+    card.style.paddingLeft = '14px';
+    
+    const isYiji = REAL_YIJI_LIST.some(item => item.char === char);
+    const isErji = ERJI_LIST.some(item => item.char === char);
+    const shortcutInfo = isYiji ? ' (一级简码)' : (isErji ? ' (二级简码)' : '');
+    
+    let resultHTML = `
+        <div class="result-header" style="margin-bottom: 12px;">
+            <span class="result-char" style="font-size: 32px; font-weight: 800; color: var(--text-primary);">${char}</span>
+            <div class="result-meta" style="display: flex; flex-direction: column; gap: 4px;">
+                <span class="pinyin" style="font-weight: bold; color: var(--text-primary); font-size: 13px;">💡 当前练习字提示</span>
+                <span class="pinyin" style="font-size: 12px; color: var(--text-secondary);">拼音: <strong>${info.p || '无'}</strong></span>
+                <span class="wubi-code" style="font-size: 12px; color: var(--text-secondary);">五笔: <strong>${info.w.toUpperCase()}</strong>${shortcutInfo}</span>
+                ${info.s !== info.w ? `<span class="pinyin" style="font-size:12px; color: var(--text-secondary);">简码: <strong style="color:var(--text-primary)">${info.s.toUpperCase()}</strong></span>` : ''}
+            </div>
+        </div>
+        
+        <div class="result-row" style="margin-top: 10px; border-top: 1px solid var(--border-color-muted); padding-top: 10px;">
+            <div class="result-row-title" style="font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">拆字字根路径</div>
+            <div class="result-roots-list" style="display: flex; gap: 6px; flex-wrap: wrap;">
+    `;
+    
+    const code = info.w;
+    for (let i = 0; i < code.length; i++) {
+        const k = code[i];
+        const keyConfig = KEY_ROOTS[k];
+        if (keyConfig) {
+            const matchedSymbol = findMatchingRoot(char, k);
+            resultHTML += `
+                <div class="result-root-item" style="background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 4px 8px; display: flex; flex-direction: column; align-items: center; min-width: 40px;">
+                    <span class="key" style="font-family: var(--font-mono); font-weight: 800; font-size: 12px; color: var(--text-primary);">${k.toUpperCase()}</span>
+                    <span class="symbol" style="font-family: 'Wubi Units', 'Wubi98 Units', sans-serif; font-size: 11px; color: var(--text-secondary); margin-top: 2px;">${matchedSymbol}</span>
+                </div>
+            `;
+        }
+    }
+    
+    resultHTML += `
+            </div>
+        </div>
+    `;
+    
+    card.innerHTML = resultHTML;
+    
+    const decompWrapper = document.createElement('div');
+    decompWrapper.style.marginTop = '12px';
+    decompWrapper.style.borderTop = '1px solid var(--border-color-muted)';
+    decompWrapper.style.paddingTop = '12px';
+    card.appendChild(decompWrapper);
+    
+    elements.queryResult.appendChild(card);
+    
+    fetch(`/api/wubi/${char}`)
+        .then(res => {
+            if (!res.ok) throw new Error('Not found in DB');
+            return res.json();
+        })
+        .then(data => {
+            renderHanziWriterDecomposition(decompWrapper, char, data.code, data.segments, data.units);
+        })
+        .catch(err => {
+            console.log("No stroke data for active practice char:", char);
+            decompWrapper.innerHTML = '<div style="font-size: 11px; color: var(--text-muted);">暂无此字笔画拆解</div>';
+        });
+}
+
+function showPracticePlaceholder(wordObj) {
+    if (!wordObj || !elements.queryResult) return;
+    elements.queryResult.innerHTML = `
+        <div class="query-empty" style="padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 160px;">
+            <div style="font-size: 28px; margin-bottom: 12px;">🎯</div>
+            <p style="font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">正在练习中</p>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; max-width: 220px; margin: 0 auto;">
+                当前字：<strong style="color: var(--text-primary); font-size: 16px;">${wordObj.char}</strong><br>
+                打字卡顿时，此处将自动呈现该字五笔编码与笔画拆分图解。
+            </p>
+        </div>
+    `;
+}
+
+function restoreDefaultQueryPlaceholder() {
+    if (!elements.queryResult) return;
+    elements.queryResult.innerHTML = `
+        <div class="query-empty">
+            <p>输入汉字，即可实时查询其五笔86编码、拼音、以及在键盘上的拆分按键路径。</p>
+        </div>
+    `;
 }
 
 // --------------------------------------------------------------------------
