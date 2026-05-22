@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>五笔达人 (Wubi Master) - 五笔86版刻意练习与可视化拆字助手</title>
     <meta name="description" content="专为五笔86版学习者设计的刻意练习工具。提供一级简码、二级简码、常用字、难拆字的盲打练习，支持任意汉字五笔编码与拼音可视化查询，配有动态字根键盘提示，助你快速建立五笔肌肉记忆，突破速度瓶颈。">
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,114 +12,76 @@
 <body>
     <div id="app">
         <div class="app-container">
-            <!-- Header -->
-            <header class="app-header">
-                <div class="header-logo">
+            <!-- Compact top bar: logo + mode select + inline stats + settings -->
+            <header class="app-topbar">
+                <div class="topbar-brand">
                     <span class="logo-icon">五</span>
-                    <div class="logo-text">
-                        <h1>五笔达人 <span class="logo-sub">Wubi Master</span></h1>
-                        <p>五笔 86 版刻意练习 & 拆字助手</p>
-                    </div>
+                    <span class="brand-name">五笔达人</span>
                 </div>
 
-                <!-- Navigation Bar inline in Header -->
-                <nav class="app-navbar">
-                    <div class="navbar-group">
-                        <span class="navbar-group-label">🎯 模式</span>
-                        <select id="mode-select" class="nav-select">
-                            <optgroup label="—— 练习 ——">
-                                <option value="yiji" selected>一级简码</option>
-                                <option value="erji">二级简码</option>
-                                <option value="highfreq">高频常用</option>
-                                <option value="hard">难拆专项</option>
-                                <option value="custom">自由练习</option>
-                                <option value="wrong-review">错字复习</option>
-                                <option value="reinforce">薄弱强化</option>
-                            </optgroup>
-                            <optgroup label="—— 工具 ——">
-                                <option value="query">五笔查字</option>
-                                <option value="history">训练历史</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </nav>
+                <select id="mode-select" class="topbar-mode-select">
+                    <option value="yiji" selected>一级简码</option>
+                    <option value="erji">二级简码</option>
+                    <option value="highfreq">高频常用</option>
+                    <option value="hard">难拆专项</option>
+                    <option value="custom">自由练习</option>
+                    <option value="wrong-review">错字复习</option>
+                    <option value="reinforce">薄弱强化</option>
+                </select>
 
-                <div class="header-actions">
-                    <label class="toggle-switch keyboard-toggle-wrapper">
-                        <input type="checkbox" id="toggle-keyboard-panel" checked>
-                        <span class="slider"></span>
-                        <span class="toggle-label">⌨️ 字根图</span>
-                    </label>
-                    <button id="theme-toggle" class="btn-icon" title="切换主题">🌓</button>
-                    <div class="keyboard-layout-info">
-                        <span class="badge">Rime 86 极点码表</span>
+                <div class="topbar-stats" id="topbar-stats">
+                    <div class="stat-inline"><span class="stat-inline-val" id="stat-wpm">0</span><span class="stat-inline-lbl">WPM</span></div>
+                    <div class="stat-inline"><span class="stat-inline-val" id="stat-accuracy">100%</span><span class="stat-inline-lbl">准确率</span></div>
+                    <div class="stat-inline"><span class="stat-inline-val" id="stat-progress">0/0</span><span class="stat-inline-lbl">进度</span></div>
+                    <div class="stat-inline"><span class="stat-inline-val" id="stat-time">00:00</span><span class="stat-inline-lbl">用时</span></div>
+                    <div class="stat-inline"><span class="stat-inline-val" id="stat-wrong">0</span><span class="stat-inline-lbl">错字</span></div>
+                </div>
+
+                <div class="topbar-actions">
+                    <button id="reset-practice" class="btn-icon" title="重置本轮">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                            <path d="M16 3h5v5"/>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                            <path d="M8 21H3v-5"/>
+                        </svg>
+                    </button>
+                    <button id="settings-toggle" class="btn-icon" title="设置">⚙</button>
+                    <div class="settings-popover" id="settings-popover" hidden>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-keyboard-panel" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">字根键盘图</span>
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-keycaps" checked>
+                            <span class="slider"></span>
+                            <span class="toggle-label">显示键面字根</span>
+                        </label>
+                        <button id="theme-toggle" class="settings-row-btn">🌓 切换主题</button>
+                        <div class="settings-badge"><span class="badge">Rime 86 极点码表</span></div>
                     </div>
                 </div>
             </header>
 
-            <!-- Main Content Grid -->
+            <!-- Main: practice zone takes the full width -->
             <main class="app-main">
-                <!-- Left Side: Practice & Dashboard -->
-                <section class="panel practice-panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title" id="practice-panel-title">五笔练习</h2>
-                        <button id="reset-practice" class="btn-icon" title="重置本轮练习">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                                <path d="M16 3h5v5"/>
-                                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                                <path d="M8 21H3v-5"/>
-                            </svg>
-                        </button>
+                <section class="practice-stage" id="practice-stage">
+                    <h2 class="stage-title" id="practice-panel-title">五笔练习</h2>
 
-                    </div>
-
-                    <!-- Stats Dashboard -->
-                    <div class="stats-bar">
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-wpm">0</div>
-                            <div class="stat-label">速度 (WPM)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-accuracy">100%</div>
-                            <div class="stat-label">准确率</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-progress">0/0</div>
-                            <div class="stat-label">进度</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-time">00:00</div>
-                            <div class="stat-label">用时</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="stat-wrong">0</div>
-                            <div class="stat-label">错字数</div>
-                        </div>
-                    </div>
-
-                    <!-- Practice Zone -->
                     <div class="practice-zone">
-                        <!-- Current Paragraph Display -->
-                        <div class="practice-text-flow" id="practice-text-flow">
-                            <!-- All characters will be pre-rendered here -->
-                        </div>
+                        <div class="practice-text-flow" id="practice-text-flow"></div>
 
-                        <!-- Active Character Detail (Hints) -->
                         <div class="active-char-detail" id="active-char-detail">
                             <div class="char-hints" id="char-hints">
                                 <span class="hint-pinyin" id="hint-pinyin">wǔ</span>
                                 <span class="hint-wubi" id="hint-wubi">gghg</span>
                             </div>
-                            <div id="practice-decomp-container" style="margin-top: 10px; display: flex; flex-direction: column; align-items: center; width: 100%;"></div>
+                            <div id="practice-decomp-container" class="practice-decomp-container"></div>
                         </div>
 
-                        <!-- Visual Guide for Roots -->
-                        <div class="roots-visual-guide" id="roots-guide">
-                            <!-- Roots split sequence will be injected here -->
-                        </div>
+                        <div class="roots-visual-guide" id="roots-guide"></div>
 
-                        <!-- Input Area -->
                         <div class="input-container">
                             <input type="text" id="practice-input" autocomplete="off" autofocus placeholder="在这里输入对应的五笔编码（用物理键盘敲击）" />
                             <div class="input-overlay" id="input-overlay"></div>
@@ -129,217 +90,166 @@
                         <div class="practice-instructions">
                             <p id="instruction-text">敲击物理键盘对应的五笔编码，然后按 <span class="kbd-key">Space 空格</span> 提交。遇到不会的字，可以停顿 1.5 秒查看键位提示。</p>
                         </div>
-
-                        <!-- Diagnostic Report Modal (Initially Hidden) -->
-                        <div class="diagnostic-report" id="diagnostic-report" style="display: none;">
-                            <h3 class="report-title">🏆 本轮练习诊断报告</h3>
-                            
-                            <div class="report-grid">
-                                <div class="report-card">
-                                    <div class="report-value" id="report-wpm">0</div>
-                                    <div class="report-label">🏎️ 速度 (WPM)</div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-value" id="report-accuracy">100%</div>
-                                    <div class="report-label">🎯 准确率</div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-value" id="report-streak">0</div>
-                                    <div class="report-label">🔥 最大连击</div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-value" id="report-backspace">0 (0%)</div>
-                                    <div class="report-label">🔙 退格击键</div>
-                                </div>
-                                <div class="report-card">
-                                    <div class="report-value" id="report-hesitation">0 (0%)</div>
-                                    <div class="report-label">🧠 脑力卡顿</div>
-                                </div>
-                            </div>
-                            
-                            <div class="report-errors">
-                                <h4>❌ 易错按键排查 (Top 3)：</h4>
-                                <div class="error-keys-badges" id="report-error-badges">
-                                    <!-- Badges like <span class="error-badge">V (折区, 3次)</span> -->
-                                </div>
-                            </div>
-                            
-                            <div class="report-feedback" id="report-feedback">
-                                正在分析您的打字习惯...
-                            </div>
-                            
-                            <div class="report-actions">
-                                <button id="report-retry-wrong-btn" class="btn-primary" style="flex: 2;">重练本轮错字</button>
-                                <button id="report-restart-btn" class="btn-secondary" style="flex: 1;">再来一轮</button>
-                                <button id="report-close-btn" class="btn-secondary" style="flex: 1;">关闭</button>
-                            </div>
-                        </div>
                     </div>
                 </section>
+            </main>
 
-                <!-- Right Side: Query Tool & History -->
-                <section class="panel query-panel">
-                    <div class="panel-header">
-                        <h2 class="panel-title" id="query-panel-title">🎯 练习伴侣</h2>
-                    </div>
-                    
-                    <!-- Content Tab 1: Tools (Query & Wrong Ledger) -->
-                    <div class="utility-tab-content" id="content-tools">
+            <!-- Floating action buttons (right-bottom) -->
+            <div class="fab-group">
+                <button class="fab" id="fab-ledger" title="错字本与薄弱区">
+                    <span class="fab-icon">❌</span>
+                    <span class="fab-badge" id="fab-ledger-badge" hidden>0</span>
+                </button>
+                <button class="fab" id="fab-tools" title="查字与历史">
+                    <span class="fab-icon">🔧</span>
+                </button>
+            </div>
+
+            <!-- Right-side drawer (shared, switches content via tabs) -->
+            <aside class="drawer" id="drawer" hidden>
+                <div class="drawer-tabs">
+                    <button class="drawer-tab" data-tab="ledger">❌ 错字本</button>
+                    <button class="drawer-tab" data-tab="weakness">🎯 薄弱区</button>
+                    <button class="drawer-tab" data-tab="query">🔍 查字</button>
+                    <button class="drawer-tab" data-tab="history">📊 历史</button>
+                    <button class="drawer-close" id="drawer-close" title="关闭 (Esc)">✕</button>
+                </div>
+
+                <div class="drawer-body">
+                    <!-- Tab: ledger -->
+                    <section class="drawer-pane" data-pane="ledger" hidden>
+                        <div class="wrong-list-container">
+                            <div class="wrong-chars" id="wrong-chars-list">
+                                <span class="empty-text">暂无错字，保持下去！</span>
+                            </div>
+                            <div class="wrong-actions" id="wrong-actions" hidden>
+                                <button id="export-anki-btn" class="btn-primary wrong-action-btn wrong-action-grow">导出 Anki</button>
+                                <button id="copy-anki-btn" class="btn-secondary wrong-action-btn wrong-action-grow">复制卡片</button>
+                                <button id="clear-wrong-btn" class="btn-secondary wrong-action-btn">清空</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tab: weakness -->
+                    <section class="drawer-pane" data-pane="weakness" hidden>
+                        <div class="weakness-analysis-container">
+                            <div class="weakness-header">
+                                <h3 class="weakness-title">笔画区薄弱度分析</h3>
+                                <button id="reinforce-weak-btn" class="btn-primary reinforce-btn" disabled>薄弱区强化</button>
+                            </div>
+                            <div class="weakness-bars" id="weakness-bars-container">
+                                <div class="weakness-bar-row">
+                                    <div class="weakness-bar-info"><span>横 (一) 1区 [G-A]</span><span class="weakness-count" id="weak-count-1">0次</span></div>
+                                    <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-1"></div></div>
+                                </div>
+                                <div class="weakness-bar-row">
+                                    <div class="weakness-bar-info"><span>竖 (丨) 2区 [H-M]</span><span class="weakness-count" id="weak-count-2">0次</span></div>
+                                    <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-2"></div></div>
+                                </div>
+                                <div class="weakness-bar-row">
+                                    <div class="weakness-bar-info"><span>撇 (丿) 3区 [T-Q]</span><span class="weakness-count" id="weak-count-3">0次</span></div>
+                                    <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-3"></div></div>
+                                </div>
+                                <div class="weakness-bar-row">
+                                    <div class="weakness-bar-info"><span>捺 (丶) 4区 [Y-P]</span><span class="weakness-count" id="weak-count-4">0次</span></div>
+                                    <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-4"></div></div>
+                                </div>
+                                <div class="weakness-bar-row">
+                                    <div class="weakness-bar-info"><span>折 (乙) 5区 [N-X]</span><span class="weakness-count" id="weak-count-5">0次</span></div>
+                                    <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-5"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Tab: query -->
+                    <section class="drawer-pane" data-pane="query" hidden>
                         <div class="query-container">
                             <div class="search-box">
                                 <input type="text" id="query-input" placeholder="输入任意汉字查编码与拆分（如：结）" maxlength="10">
                                 <button id="query-btn" class="btn-primary">查询</button>
                             </div>
-                            
                             <div class="query-result" id="query-result">
                                 <div class="query-empty">
                                     <p>输入汉字，即可实时查询其五笔86编码、拼音、以及在键盘上的拆分按键路径。</p>
                                 </div>
                             </div>
                         </div>
+                    </section>
 
-                        <!-- Wrong Character Ledger -->
-                        <div class="wrong-list-container">
-                            <h3>❌ 本次错字本</h3>
-                            <div class="wrong-chars" id="wrong-chars-list">
-                                <!-- Wrong characters will be listed here -->
-                                <span class="empty-text">暂无错字，保持下去！</span>
-                            </div>
-                            <div class="wrong-actions" id="wrong-actions" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                                <button id="export-anki-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">导出 Anki</button>
-                                <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
-                                <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
-                            </div>
-                            
-                            <!-- Weakness & Stroke Analysis -->
-                            <div class="weakness-analysis-container" style="margin-top: 15px; border-top: 1px solid var(--border-color-muted); padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                                <div class="weakness-header" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">🎯 笔画区薄弱度分析</h3>
-                                    <button id="reinforce-weak-btn" class="btn-primary" style="font-size: 10px; padding: 4px 8px; border-radius: var(--radius-sm); cursor: pointer;" disabled>
-                                        薄弱区强化
-                                    </button>
-                                </div>
-                                <div class="weakness-bars" id="weakness-bars-container">
-                                    <!-- Dynamic progress bars for the 5 zones -->
-                                    <div class="weakness-bar-row">
-                                        <div class="weakness-bar-info">
-                                            <span>横 (一) 1区 [G-A]</span>
-                                            <span class="weakness-count" id="weak-count-1">0次</span>
-                                        </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-1" style="width: 0%;"></div></div>
-                                    </div>
-                                    <div class="weakness-bar-row">
-                                        <div class="weakness-bar-info">
-                                            <span>竖 (丨) 2区 [H-M]</span>
-                                            <span class="weakness-count" id="weak-count-2">0次</span>
-                                        </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-2" style="width: 0%;"></div></div>
-                                    </div>
-                                    <div class="weakness-bar-row">
-                                        <div class="weakness-bar-info">
-                                            <span>撇 (丿) 3区 [T-Q]</span>
-                                            <span class="weakness-count" id="weak-count-3">0次</span>
-                                        </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-3" style="width: 0%;"></div></div>
-                                    </div>
-                                    <div class="weakness-bar-row">
-                                        <div class="weakness-bar-info">
-                                            <span>捺 (丶) 4区 [Y-P]</span>
-                                            <span class="weakness-count" id="weak-count-4">0次</span>
-                                        </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-4" style="width: 0%;"></div></div>
-                                    </div>
-                                    <div class="weakness-bar-row">
-                                        <div class="weakness-bar-info">
-                                            <span>折 (乙) 5区 [N-X]</span>
-                                            <span class="weakness-count" id="weak-count-5">0次</span>
-                                        </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-5" style="width: 0%;"></div></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Tab 2: History (Training Logs) -->
-                    <div class="utility-tab-content" id="content-history" style="display: none;">
+                    <!-- Tab: history -->
+                    <section class="drawer-pane" data-pane="history" hidden>
                         <div class="history-summary-grid">
-                            <div class="history-stat-card">
-                                <div class="history-stat-val" id="hist-total-rounds">0</div>
-                                <div class="history-stat-lbl">总次数</div>
-                            </div>
-                            <div class="history-stat-card">
-                                <div class="history-stat-val" id="hist-avg-wpm">0</div>
-                                <div class="history-stat-lbl">平均WPM</div>
-                            </div>
-                            <div class="history-stat-card">
-                                <div class="history-stat-val" id="hist-avg-acc">100%</div>
-                                <div class="history-stat-lbl">平均准确率</div>
-                            </div>
+                            <div class="history-stat-card"><div class="history-stat-val" id="hist-total-rounds">0</div><div class="history-stat-lbl">总次数</div></div>
+                            <div class="history-stat-card"><div class="history-stat-val" id="hist-avg-wpm">0</div><div class="history-stat-lbl">平均WPM</div></div>
+                            <div class="history-stat-card"><div class="history-stat-val" id="hist-avg-acc">100%</div><div class="history-stat-lbl">平均准确率</div></div>
                         </div>
-                        
                         <div class="history-chart-card">
-                            <div class="chart-header-row">
-                                <span class="chart-title">📈 WPM 速度走势 (各模式最近5次)</span>
-                            </div>
+                            <div class="chart-header-row"><span class="chart-title">📈 WPM 速度走势 (各模式最近5次)</span></div>
                             <div id="history-chart-container" class="chart-container"></div>
                             <div class="chart-legend">
-                                <div class="legend-item"><span class="legend-color" style="background: var(--text-primary);"></span>一级</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #555555; border-bottom: 1.5px dashed #fff;"></span>二级</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #777777;"></span>高频</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #999999; border-bottom: 1.5px dotted #fff;"></span>难字</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #b33939;"></span>错字</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #cccccc; border-bottom: 1.5px dashed #fff;"></span>自由</div>
+                                <div class="legend-item"><span class="legend-color legend-yiji"></span>一级</div>
+                                <div class="legend-item"><span class="legend-color legend-erji"></span>二级</div>
+                                <div class="legend-item"><span class="legend-color legend-highfreq"></span>高频</div>
+                                <div class="legend-item"><span class="legend-color legend-hard"></span>难字</div>
+                                <div class="legend-item"><span class="legend-color legend-wrong"></span>错字</div>
+                                <div class="legend-item"><span class="legend-color legend-custom"></span>自由</div>
                             </div>
                         </div>
-                        
                         <div class="history-list-wrapper">
                             <table class="history-table">
-                                <thead>
-                                    <tr>
-                                        <th>时间</th>
-                                        <th>模式</th>
-                                        <th>速度</th>
-                                        <th>准确率</th>
-                                        <th>错字</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th>时间</th><th>模式</th><th>速度</th><th>准确率</th><th>错字</th></tr></thead>
                                 <tbody id="history-table-body">
-                                    <tr>
-                                        <td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td>
-                                    </tr>
+                                    <tr><td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td></tr>
                                 </tbody>
                             </table>
                         </div>
-                        
                         <div class="history-actions">
-                            <button id="export-history-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px;">导出 CSV</button>
-                            <button id="clear-history-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空历史</button>
+                            <button id="export-history-btn" class="btn-primary history-action-btn history-action-grow">导出 CSV</button>
+                            <button id="clear-history-btn" class="btn-secondary history-action-btn">清空历史</button>
                         </div>
+                    </section>
+                </div>
+            </aside>
+
+            <!-- Diagnostic report modal -->
+            <div class="report-modal" id="diagnostic-report" hidden>
+                <div class="report-backdrop" id="report-backdrop"></div>
+                <div class="report-card">
+                    <h3 class="report-title">🏆 本轮练习诊断报告</h3>
+                    <div class="report-grid">
+                        <div class="report-card-cell"><div class="report-value" id="report-wpm">0</div><div class="report-label">🏎️ 速度 (WPM)</div></div>
+                        <div class="report-card-cell"><div class="report-value" id="report-accuracy">100%</div><div class="report-label">🎯 准确率</div></div>
+                        <div class="report-card-cell"><div class="report-value" id="report-streak">0</div><div class="report-label">🔥 最大连击</div></div>
+                        <div class="report-card-cell"><div class="report-value" id="report-backspace">0 (0%)</div><div class="report-label">🔙 退格击键</div></div>
+                        <div class="report-card-cell"><div class="report-value" id="report-hesitation">0 (0%)</div><div class="report-label">🧠 脑力卡顿</div></div>
                     </div>
-                </section>
-
-            </main>
-
-            <!-- Bottom: Keyboard Display -->
-            <footer class="app-footer">
-                <div class="keyboard-header">
-                    <h3>📖 五笔86键位字根图 <span class="keyboard-hint">（物理按键会实时高亮，悬停可查看键位口诀与全部字根）</span></h3>
-                    <div class="keyboard-controls">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="toggle-keycaps" checked>
-                            <span class="slider"></span>
-                            <span class="toggle-label">显示键面字根</span>
-                        </label>
+                    <div class="report-errors">
+                        <h4>❌ 易错按键排查 (Top 3)：</h4>
+                        <div class="error-keys-badges" id="report-error-badges"></div>
+                    </div>
+                    <div class="report-feedback" id="report-feedback">正在分析您的打字习惯...</div>
+                    <div class="report-actions">
+                        <button id="report-retry-wrong-btn" class="btn-primary report-btn-primary">重练本轮错字</button>
+                        <button id="report-restart-btn" class="btn-secondary report-btn-secondary">再来一轮</button>
+                        <button id="report-close-btn" class="btn-secondary report-btn-secondary">关闭</button>
                     </div>
                 </div>
-                
-                <div class="virtual-keyboard" id="keyboard-wrapper">
-                    <!-- Keyboard keys will be dynamically generated and injected here -->
+            </div>
+
+            <!-- Bottom: collapsible keyboard strip -->
+            <footer class="app-footer" id="app-footer">
+                <button class="keyboard-strip" id="keyboard-strip" aria-expanded="false">
+                    <span class="strip-label">⌨ 字根键盘图</span>
+                    <span class="strip-hint">物理按键会实时高亮</span>
+                    <span class="strip-arrow" id="keyboard-strip-arrow">▲</span>
+                </button>
+                <div class="keyboard-body" id="keyboard-body" hidden>
+                    <div class="virtual-keyboard" id="keyboard-wrapper"></div>
                 </div>
             </footer>
 
-            <!-- Mnemonic Tooltip/Card Display -->
+            <!-- Mnemonic tooltip -->
             <div class="mnemonic-card" id="mnemonic-card">
                 <div class="mnemonic-key">G</div>
                 <div class="mnemonic-formula">王旁青头戋五一</div>
@@ -348,7 +258,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
