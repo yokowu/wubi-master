@@ -1626,6 +1626,166 @@ input:checked + .slider:before {
     width: 100%;
 }
 
+/* ==========================================================================
+   Refactor: extracted classes from inline styles
+   ========================================================================== */
+
+/* Practice decomposition container */
+.practice-decomp-container {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* Weakness analysis */
+.weakness-analysis-container {
+    margin-top: 15px;
+    border-top: 1px solid var(--border-color-muted);
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.weakness-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.weakness-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.reinforce-btn {
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.weakness-bar-fill {
+    width: 0%;
+}
+
+/* History action buttons */
+.history-action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+}
+.history-action-grow { flex: 1; }
+
+/* Wrong action buttons */
+.wrong-action-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 100px;
+}
+.wrong-action-grow { flex: 1; }
+
+/* Report action buttons */
+.report-btn-primary { flex: 2; }
+.report-btn-secondary { flex: 1; }
+
+/* History chart legend colors */
+.legend-color.legend-yiji { background: var(--text-primary); }
+.legend-color.legend-erji { background: #555555; border-bottom: 1.5px dashed #fff; }
+.legend-color.legend-highfreq { background: #777777; }
+.legend-color.legend-hard { background: #999999; border-bottom: 1.5px dotted #fff; }
+.legend-color.legend-wrong { background: #b33939; }
+
+/* Companion: active practice hint card (right panel during practice) */
+.active-hint-card {
+    border-left: 4px solid var(--text-primary);
+    padding-left: 14px;
+}
+.active-hint-header {
+    margin-bottom: 12px;
+}
+.active-hint-char {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+.active-hint-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.active-hint-title {
+    font-weight: bold;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+.active-hint-row {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+.active-hint-strong {
+    color: var(--text-primary);
+}
+.active-hint-decomp {
+    margin-top: 12px;
+    border-top: 1px solid var(--border-color-muted);
+    padding-top: 12px;
+}
+.active-hint-empty {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* Companion: practice placeholder shown when not hesitating */
+.practice-placeholder {
+    text-align: center;
+    padding: 24px 12px;
+}
+.practice-placeholder-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+.practice-placeholder-title {
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px;
+}
+.practice-placeholder-hint {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Query result extras */
+.query-decomp {
+    margin-top: 10px;
+}
+.pinyin-shortcode {
+    font-size: 12px;
+}
+.shortcode-strong {
+    color: var(--primary);
+}
+.query-empty-error {
+    color: var(--error);
+}
+.empty-text-success {
+    color: var(--text-primary);
+}
+
+/* History trend chart */
+.chart-svg {
+    display: block;
+    width: 100%;
+}
+.chart-hover-zone {
+    cursor: pointer;
+}
 
 
 

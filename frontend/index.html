@@ -112,7 +112,7 @@
                                 <span class="hint-pinyin" id="hint-pinyin">wǔ</span>
                                 <span class="hint-wubi" id="hint-wubi">gghg</span>
                             </div>
-                            <div id="practice-decomp-container" style="margin-top: 10px; display: flex; flex-direction: column; align-items: center; width: 100%;"></div>
+                            <div id="practice-decomp-container" class="practice-decomp-container"></div>
                         </div>
 
                         <!-- Visual Guide for Roots -->
@@ -169,9 +169,9 @@
                             </div>
                             
                             <div class="report-actions">
-                                <button id="report-retry-wrong-btn" class="btn-primary" style="flex: 2;">重练本轮错字</button>
-                                <button id="report-restart-btn" class="btn-secondary" style="flex: 1;">再来一轮</button>
-                                <button id="report-close-btn" class="btn-secondary" style="flex: 1;">关闭</button>
+                                <button id="report-retry-wrong-btn" class="btn-primary report-btn-primary">重练本轮错字</button>
+                                <button id="report-restart-btn" class="btn-secondary report-btn-secondary">再来一轮</button>
+                                <button id="report-close-btn" class="btn-secondary report-btn-secondary">关闭</button>
                             </div>
                         </div>
                     </div>
@@ -205,17 +205,17 @@
                                 <!-- Wrong characters will be listed here -->
                                 <span class="empty-text">暂无错字，保持下去！</span>
                             </div>
-                            <div class="wrong-actions" id="wrong-actions" style="display: none; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
-                                <button id="export-anki-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">导出 Anki</button>
-                                <button id="copy-anki-btn" class="btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px; min-width: 100px;">复制卡片</button>
-                                <button id="clear-wrong-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空</button>
+                            <div class="wrong-actions" id="wrong-actions" style="display: none;">
+                                <button id="export-anki-btn" class="btn-primary wrong-action-btn wrong-action-grow">导出 Anki</button>
+                                <button id="copy-anki-btn" class="btn-secondary wrong-action-btn wrong-action-grow">复制卡片</button>
+                                <button id="clear-wrong-btn" class="btn-secondary wrong-action-btn">清空</button>
                             </div>
                             
                             <!-- Weakness & Stroke Analysis -->
-                            <div class="weakness-analysis-container" style="margin-top: 15px; border-top: 1px solid var(--border-color-muted); padding-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                                <div class="weakness-header" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <h3 style="margin: 0; font-size: 13px; font-weight: 800; color: var(--text-primary); text-transform: uppercase;">🎯 笔画区薄弱度分析</h3>
-                                    <button id="reinforce-weak-btn" class="btn-primary" style="font-size: 10px; padding: 4px 8px; border-radius: var(--radius-sm); cursor: pointer;" disabled>
+                            <div class="weakness-analysis-container">
+                                <div class="weakness-header">
+                                    <h3 class="weakness-title">🎯 笔画区薄弱度分析</h3>
+                                    <button id="reinforce-weak-btn" class="btn-primary reinforce-btn" disabled>
                                         薄弱区强化
                                     </button>
                                 </div>
@@ -226,35 +226,35 @@
                                             <span>横 (一) 1区 [G-A]</span>
                                             <span class="weakness-count" id="weak-count-1">0次</span>
                                         </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-1" style="width: 0%;"></div></div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-1"></div></div>
                                     </div>
                                     <div class="weakness-bar-row">
                                         <div class="weakness-bar-info">
                                             <span>竖 (丨) 2区 [H-M]</span>
                                             <span class="weakness-count" id="weak-count-2">0次</span>
                                         </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-2" style="width: 0%;"></div></div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-2"></div></div>
                                     </div>
                                     <div class="weakness-bar-row">
                                         <div class="weakness-bar-info">
                                             <span>撇 (丿) 3区 [T-Q]</span>
                                             <span class="weakness-count" id="weak-count-3">0次</span>
                                         </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-3" style="width: 0%;"></div></div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-3"></div></div>
                                     </div>
                                     <div class="weakness-bar-row">
                                         <div class="weakness-bar-info">
                                             <span>捺 (丶) 4区 [Y-P]</span>
                                             <span class="weakness-count" id="weak-count-4">0次</span>
                                         </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-4" style="width: 0%;"></div></div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-4"></div></div>
                                     </div>
                                     <div class="weakness-bar-row">
                                         <div class="weakness-bar-info">
                                             <span>折 (乙) 5区 [N-X]</span>
                                             <span class="weakness-count" id="weak-count-5">0次</span>
                                         </div>
-                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-5" style="width: 0%;"></div></div>
+                                        <div class="weakness-bar-bg"><div class="weakness-bar-fill" id="weak-fill-5"></div></div>
                                     </div>
                                 </div>
                             </div>
@@ -284,11 +284,11 @@
                             </div>
                             <div id="history-chart-container" class="chart-container"></div>
                             <div class="chart-legend">
-                                <div class="legend-item"><span class="legend-color" style="background: var(--text-primary);"></span>一级</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #555555; border-bottom: 1.5px dashed #fff;"></span>二级</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #777777;"></span>高频</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #999999; border-bottom: 1.5px dotted #fff;"></span>难字</div>
-                                <div class="legend-item"><span class="legend-color" style="background: #b33939;"></span>错字</div>
+                                <div class="legend-item"><span class="legend-color legend-yiji"></span>一级</div>
+                                <div class="legend-item"><span class="legend-color legend-erji"></span>二级</div>
+                                <div class="legend-item"><span class="legend-color legend-highfreq"></span>高频</div>
+                                <div class="legend-item"><span class="legend-color legend-hard"></span>难字</div>
+                                <div class="legend-item"><span class="legend-color legend-wrong"></span>错字</div>
                                 <div class="legend-item"><span class="legend-color" style="background: #cccccc; border-bottom: 1.5px dashed #fff;"></span>自由</div>
                             </div>
                         </div>
@@ -313,8 +313,8 @@
                         </div>
                         
                         <div class="history-actions">
-                            <button id="export-history-btn" class="btn-primary" style="flex: 1; padding: 8px 12px; font-size: 12px;">导出 CSV</button>
-                            <button id="clear-history-btn" class="btn-secondary" style="padding: 8px 12px; font-size: 12px;">清空历史</button>
+                            <button id="export-history-btn" class="btn-primary history-action-btn history-action-grow">导出 CSV</button>
+                            <button id="clear-history-btn" class="btn-secondary history-action-btn">清空历史</button>
                         </div>
                     </div>
                 </section>
@@ -348,7 +348,6 @@
             </div>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
