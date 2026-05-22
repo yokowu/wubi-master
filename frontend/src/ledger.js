@@ -6,6 +6,7 @@ import { KEY_ROOTS, REAL_YIJI_LIST, ZONE_KEYS, KEY_TO_ZONE } from './constants.j
 import { findMatchingRoot } from './practice/roots.js';
 import { api } from './api.js';
 import { ERJI_LIST } from './wubi86_data.js';
+import { refreshLedgerBadge } from './fab.js';
 
 let onAddToCustomPractice = () => {};
 
@@ -27,11 +28,12 @@ export function renderWrongLedger() {
 
     if (ledger.size === 0) {
         list.innerHTML = '<span class="empty-text">暂无错字，保持下去！</span>';
-        if (actions) actions.style.display = 'none';
+        if (actions) actions.hidden = true;
+        refreshLedgerBadge();
         return;
     }
 
-    if (actions) actions.style.display = 'flex';
+    if (actions) actions.hidden = false;
 
     ledger.forEach(char => {
         const info = WUBI_DICT[char];
@@ -44,6 +46,8 @@ export function renderWrongLedger() {
         badge.addEventListener('click', () => onAddToCustomPractice(char));
         list.appendChild(badge);
     });
+
+    refreshLedgerBadge();
 }
 
 export function addWrongCharacter(wordObj) {

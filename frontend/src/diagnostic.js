@@ -2,23 +2,6 @@ import { $ } from './dom.js';
 import { getState } from './state.js';
 import { ZONE_NAMES_SHORT, ZONE_NAMES_LONG } from './constants.js';
 
-const HIDE_DURING_REPORT = [
-    'practice-text-flow',
-    'active-char-detail',
-    'roots-guide'
-];
-
-function setPracticeUIVisibility(show) {
-    HIDE_DURING_REPORT.forEach(id => {
-        const el = $(id);
-        if (el) el.style.display = show ? 'flex' : 'none';
-    });
-    const inputContainer = document.querySelector('.input-container');
-    const instr = document.querySelector('.practice-instructions');
-    if (inputContainer) inputContainer.style.display = show ? 'block' : 'none';
-    if (instr) instr.style.display = show ? 'block' : 'none';
-}
-
 function buildFeedback(acc, wpm, backspacePct, hesitationPct, sortedKeys) {
     let text;
     if (acc >= 95 && wpm >= 40 && backspacePct < 8 && hesitationPct < 10) {
@@ -43,8 +26,6 @@ function buildFeedback(acc, wpm, backspacePct, hesitationPct, sortedKeys) {
 
 export function showDiagnosticReport(onRecorded) {
     if (typeof onRecorded === 'function') onRecorded();
-
-    setPracticeUIVisibility(false);
 
     const s = getState();
     const elapsedMin = s.startTime ? (new Date() - s.startTime) / 1000 / 60 : 0.1;
@@ -86,13 +67,12 @@ export function showDiagnosticReport(onRecorded) {
     if (feedback) feedback.innerHTML = buildFeedback(acc, wpm, backspacePct, hesitationPct, sorted);
 
     const report = $('diagnostic-report');
-    if (report) report.style.display = 'flex';
+    if (report) report.hidden = false;
 }
 
 export function hideDiagnosticReport() {
     const report = $('diagnostic-report');
-    if (report) report.style.display = 'none';
-    setPracticeUIVisibility(true);
+    if (report) report.hidden = true;
     const input = $('practice-input');
     if (input) input.disabled = false;
 }
