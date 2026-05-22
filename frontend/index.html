@@ -30,19 +30,32 @@
                 </div>
             </header>
 
+            <!-- Navigation Bar -->
+            <nav class="app-navbar">
+                <div class="navbar-group">
+                    <span class="navbar-group-label">🎯 五笔练习</span>
+                    <button class="nav-btn active" data-mode="yiji">一级简码</button>
+                    <button class="nav-btn" data-mode="erji">二级简码</button>
+                    <button class="nav-btn" data-mode="highfreq">高频常用字</button>
+                    <button class="nav-btn" data-mode="hard">难拆字专项</button>
+                    <button class="nav-btn" data-mode="custom">自由练习</button>
+                    <button class="nav-btn" data-mode="wrong-review" id="nav-wrong-review">错字复习</button>
+                    <button class="nav-btn" data-mode="reinforce" id="nav-reinforce">薄弱区强化</button>
+                </div>
+                <div class="navbar-divider"></div>
+                <div class="navbar-group">
+                    <span class="navbar-group-label">🔧 工具与数据</span>
+                    <button class="nav-btn" data-mode="query" id="nav-btn-query">🔍 五笔查字</button>
+                    <button class="nav-btn" data-mode="history" id="nav-btn-history">📈 训练历史</button>
+                </div>
+            </nav>
+
             <!-- Main Content Grid -->
             <main class="app-main">
                 <!-- Left Side: Practice & Dashboard -->
                 <section class="panel practice-panel">
                     <div class="panel-header">
-                        <nav class="practice-tabs">
-                            <button class="tab-btn active" data-mode="yiji">一级简码</button>
-                            <button class="tab-btn" data-mode="erji">二级简码</button>
-                            <button class="tab-btn" data-mode="highfreq">高频常用字</button>
-                            <button class="tab-btn" data-mode="hard">难拆字专项</button>
-                            <button class="tab-btn" data-mode="custom">自由练习</button>
-                            <button class="tab-btn" data-mode="wrong-review" id="tab-wrong-review">错字复习</button>
-                        </nav>
+                        <h2 class="panel-title" id="practice-panel-title">五笔练习</h2>
                         <button id="reset-practice" class="btn-icon" title="重置本轮练习">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
@@ -159,10 +172,7 @@
                 <!-- Right Side: Query Tool & History -->
                 <section class="panel query-panel">
                     <div class="panel-header">
-                        <nav class="utility-tabs">
-                            <button class="tab-btn active" id="tab-btn-tools">🔍 查字与错字</button>
-                            <button class="tab-btn" id="tab-btn-history">📈 训练历史</button>
-                        </nav>
+                        <h2 class="panel-title" id="query-panel-title">🎯 练习伴侣</h2>
                     </div>
                     
                     <!-- Content Tab 1: Tools (Query & Wrong Ledger) -->

@@ -139,8 +139,6 @@ const elements = {
     reportCloseBtn: null,
     
     // History Panel Elements
-    tabBtnTools: null,
-    tabBtnHistory: null,
     contentTools: null,
     contentHistory: null,
     histTotalRounds: null,
@@ -220,13 +218,13 @@ function init() {
     loadPracticeHistory();
     loadWeaknessStats();
     
-    loadPracticeMode('yiji');
+    switchMode('yiji');
     loadTheme();
 }
 
 function bindDOMElements() {
     elements.themeToggle = document.getElementById('theme-toggle');
-    elements.tabs = document.querySelectorAll('.tab-btn');
+    elements.tabs = document.querySelectorAll('.nav-btn');
     elements.wpm = document.getElementById('stat-wpm');
     elements.accuracy = document.getElementById('stat-accuracy');
     elements.progress = document.getElementById('stat-progress');
@@ -276,8 +274,6 @@ function bindDOMElements() {
     elements.reportCloseBtn = document.getElementById('report-close-btn');
     
     // Bind History elements
-    elements.tabBtnTools = document.getElementById('tab-btn-tools');
-    elements.tabBtnHistory = document.getElementById('tab-btn-history');
     elements.contentTools = document.getElementById('content-tools');
     elements.contentHistory = document.getElementById('content-history');
     elements.histTotalRounds = document.getElementById('hist-total-rounds');
@@ -364,6 +360,82 @@ function showMnemonicTooltip(e, key) {
 
 function hideMnemonicTooltip() {
     elements.mnemonicCard.classList.remove('show');
+}
+
+// Switch layout and active tab/mode
+function switchMode(mode) {
+    if (!mode) return;
+    
+    // Update active navbar button styling
+    if (elements.tabs) {
+        elements.tabs.forEach(t => {
+            if (t.getAttribute('data-mode') === mode) {
+                t.classList.add('active');
+            } else {
+                t.classList.remove('active');
+            }
+        });
+    }
+
+    hideDiagnosticReport();
+    
+    const mainEl = document.querySelector('.app-main');
+    if (!mainEl) return;
+    
+    // Update Titles
+    const practicePanelTitle = document.getElementById('practice-panel-title');
+    if (practicePanelTitle) {
+        const MODE_LABELS = {
+            'yiji': '一级简码练习',
+            'erji': '二级简码练习',
+            'highfreq': '高频常用字练习',
+            'hard': '难拆字专项练习',
+            'custom': '自由练习模式',
+            'wrong-review': '错字复习模式',
+            'reinforce': '薄弱区强化特训'
+        };
+        practicePanelTitle.textContent = MODE_LABELS[mode] || '五笔练习';
+    }
+    
+    const queryPanelTitle = document.getElementById('query-panel-title');
+    if (queryPanelTitle) {
+        if (mode === 'query') {
+            queryPanelTitle.textContent = '🔍 汉字五笔编码拆分查询';
+        } else if (mode === 'history') {
+            queryPanelTitle.textContent = '📈 训练历史与走势';
+        } else {
+            queryPanelTitle.textContent = '🎯 练习伴侣';
+        }
+    }
+    
+    if (mode === 'query') {
+        // Query Mode (dictionary lookup)
+        mainEl.className = 'app-main layout-query';
+        if (elements.contentTools) elements.contentTools.style.display = 'flex';
+        if (elements.contentHistory) elements.contentHistory.style.display = 'none';
+        
+        restoreDefaultQueryPlaceholder();
+        if (elements.queryInput) {
+            elements.queryInput.focus();
+        }
+    } else if (mode === 'history') {
+        // History Mode
+        mainEl.className = 'app-main layout-history';
+        if (elements.contentTools) elements.contentTools.style.display = 'none';
+        if (elements.contentHistory) elements.contentHistory.style.display = 'flex';
+        
+        renderHistoryUI();
+    } else {
+        // Practice Mode
+        mainEl.className = 'app-main layout-practice';
+        if (elements.contentTools) elements.contentTools.style.display = 'flex';
+        if (elements.contentHistory) elements.contentHistory.style.display = 'none';
+        
+        loadPracticeMode(mode);
+        if (elements.practiceInput) {
+            elements.practiceInput.focus();
+        }
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -944,7 +1016,7 @@ function addCharToCustomPractice(char) {
     };
     
     if (state.mode !== 'custom') {
-        loadPracticeMode('custom');
+        switchMode('custom');
     }
     
     state.queue.push(practiceItem);
@@ -1394,10 +1466,8 @@ function updateTimer() {
 function setupEventListeners() {
     elements.tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            elements.tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            loadPracticeMode(tab.getAttribute('data-mode'));
-            elements.practiceInput.focus();
+            const mode = tab.getAttribute('data-mode');
+            switchMode(mode);
         });
     });
     
@@ -1433,10 +1503,7 @@ function setupEventListeners() {
     
     if (elements.reinforceWeakBtn) {
         elements.reinforceWeakBtn.addEventListener('click', () => {
-            // Remove active state from all tabs
-            elements.tabs.forEach(t => t.classList.remove('active'));
-            loadPracticeMode('reinforce');
-            elements.practiceInput.focus();
+            switchMode('reinforce');
         });
     }
     
@@ -1449,13 +1516,7 @@ function setupEventListeners() {
                 return;
             }
             hideDiagnosticReport();
-            
-            // Set tab to active manually
-            elements.tabs.forEach(t => t.classList.remove('active'));
-            const tabWrong = document.getElementById('tab-wrong-review');
-            if (tabWrong) tabWrong.classList.add('active');
-            
-            loadPracticeMode('wrong-review');
+            switchMode('wrong-review');
         });
     }
     
@@ -1486,23 +1547,7 @@ function setupEventListeners() {
         localStorage.setItem('wubi-theme', nextTheme);
     });
 
-    // Utility tab switcher logic
-    if (elements.tabBtnTools && elements.tabBtnHistory) {
-        elements.tabBtnTools.addEventListener('click', () => {
-            elements.tabBtnTools.classList.add('active');
-            elements.tabBtnHistory.classList.remove('active');
-            elements.contentTools.style.display = 'flex';
-            elements.contentHistory.style.display = 'none';
-        });
-        
-        elements.tabBtnHistory.addEventListener('click', () => {
-            elements.tabBtnHistory.classList.add('active');
-            elements.tabBtnTools.classList.remove('active');
-            elements.contentTools.style.display = 'none';
-            elements.contentHistory.style.display = 'flex';
-            renderHistoryUI();
-        });
-    }
+    // Utility tab switcher logic is now unified in switchMode
 
     // History action buttons
     if (elements.exportHistoryBtn) {
