@@ -26,20 +26,22 @@
                 <!-- Navigation Bar inline in Header -->
                 <nav class="app-navbar">
                     <div class="navbar-group">
-                        <span class="navbar-group-label">🎯 练习</span>
-                        <button class="nav-btn active" data-mode="yiji">一级简码</button>
-                        <button class="nav-btn" data-mode="erji">二级简码</button>
-                        <button class="nav-btn" data-mode="highfreq">高频常用</button>
-                        <button class="nav-btn" data-mode="hard">难拆专项</button>
-                        <button class="nav-btn" data-mode="custom">自由练习</button>
-                        <button class="nav-btn" data-mode="wrong-review" id="nav-wrong-review">错字复习</button>
-                        <button class="nav-btn" data-mode="reinforce" id="nav-reinforce">薄弱强化</button>
-                    </div>
-                    <div class="navbar-divider"></div>
-                    <div class="navbar-group">
-                        <span class="navbar-group-label">🔧 工具</span>
-                        <button class="nav-btn" data-mode="query" id="nav-btn-query">🔍 查字</button>
-                        <button class="nav-btn" data-mode="history" id="nav-btn-history">📈 历史</button>
+                        <span class="navbar-group-label">🎯 模式</span>
+                        <select id="mode-select" class="nav-select">
+                            <optgroup label="—— 练习 ——">
+                                <option value="yiji" selected>一级简码</option>
+                                <option value="erji">二级简码</option>
+                                <option value="highfreq">高频常用</option>
+                                <option value="hard">难拆专项</option>
+                                <option value="custom">自由练习</option>
+                                <option value="wrong-review">错字复习</option>
+                                <option value="reinforce">薄弱强化</option>
+                            </optgroup>
+                            <optgroup label="—— 工具 ——">
+                                <option value="query">五笔查字</option>
+                                <option value="history">训练历史</option>
+                            </optgroup>
+                        </select>
                     </div>
                 </nav>
 

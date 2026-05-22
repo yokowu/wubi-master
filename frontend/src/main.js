@@ -92,6 +92,7 @@ let state = {
 const elements = {
     themeToggle: null,
     tabs: null,
+    modeSelect: null,
     wpm: null,
     accuracy: null,
     progress: null,
@@ -223,7 +224,15 @@ function init() {
     loadTheme();
     
     // Load saved keyboard panel visibility
-    const showKeyboard = localStorage.getItem('wubi-show-keyboard') !== 'false';
+    const isSmallScreen = window.innerWidth <= 1024;
+    let showKeyboard = false;
+    const savedSetting = localStorage.getItem('wubi-show-keyboard');
+    if (savedSetting !== null) {
+        showKeyboard = savedSetting === 'true';
+    } else {
+        showKeyboard = !isSmallScreen;
+    }
+    
     if (elements.toggleKeyboardPanel) {
         elements.toggleKeyboardPanel.checked = showKeyboard;
         const footer = document.querySelector('.app-footer');
@@ -236,6 +245,7 @@ function init() {
 function bindDOMElements() {
     elements.themeToggle = document.getElementById('theme-toggle');
     elements.tabs = document.querySelectorAll('.nav-btn');
+    elements.modeSelect = document.getElementById('mode-select');
     elements.wpm = document.getElementById('stat-wpm');
     elements.accuracy = document.getElementById('stat-accuracy');
     elements.progress = document.getElementById('stat-progress');
@@ -377,6 +387,11 @@ function hideMnemonicTooltip() {
 // Switch layout and active tab/mode
 function switchMode(mode) {
     if (!mode) return;
+    
+    // Sync dropdown select element
+    if (elements.modeSelect) {
+        elements.modeSelect.value = mode;
+    }
     
     // Update active navbar button styling
     if (elements.tabs) {
@@ -1476,6 +1491,12 @@ function updateTimer() {
 // Theme & Settings
 // --------------------------------------------------------------------------
 function setupEventListeners() {
+    if (elements.modeSelect) {
+        elements.modeSelect.addEventListener('change', (e) => {
+            switchMode(e.target.value);
+        });
+    }
+    
     elements.tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             const mode = tab.getAttribute('data-mode');
@@ -1579,6 +1600,23 @@ function setupEventListeners() {
     if (elements.clearHistoryBtn) {
         elements.clearHistoryBtn.addEventListener('click', clearHistory);
     }
+
+    // Auto-collapse keyboard panel when resizing down to <= 1024px
+    let lastWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+        const currentWidth = window.innerWidth;
+        if (lastWidth > 1024 && currentWidth <= 1024) {
+            if (elements.toggleKeyboardPanel) {
+                elements.toggleKeyboardPanel.checked = false;
+                const footer = document.querySelector('.app-footer');
+                if (footer) {
+                    footer.style.display = 'none';
+                }
+                localStorage.setItem('wubi-show-keyboard', 'false');
+            }
+        }
+        lastWidth = currentWidth;
+    });
 }
 
 // --------------------------------------------------------------------------
