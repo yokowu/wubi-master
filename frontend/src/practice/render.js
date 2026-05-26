@@ -1,8 +1,13 @@
 import { $ } from '../dom.js';
 import { getState } from '../state.js';
-import { KEY_ROOTS, ZONE_KEYS, ZONE_LABELS } from '../constants.js';
-import { findMatchingRoot } from './roots.js';
+import { ZONE_KEYS, ZONE_LABELS } from '../constants.js';
 import { findWeakestZone } from '../ledger.js';
+import { ERJI_LIST, HIGH_FREQ_LIST } from '../wubi86_data.js';
+import { REAL_YIJI_LIST } from '../constants.js';
+import { api } from '../api.js';
+
+let decompToken = 0;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export function renderQueue() {
     const flow = $('practice-text-flow');
@@ -29,25 +34,11 @@ export function renderQueue() {
 }
 
 function renderEmptyQueue(flow, mode) {
-    const pinyin = $('hint-pinyin');
-    const wubi = $('hint-wubi');
-    const roots = $('roots-guide');
-
-    if (mode === 'custom') {
-        flow.innerHTML = '<div class="flow-status">🔍</div>';
-        if (pinyin) pinyin.textContent = '暂无内容';
-        if (wubi) wubi.textContent = '请在右侧查字并添加';
-        if (roots) roots.innerHTML = '<span class="empty-text">在右侧查询面板输入生字，点击"添加练习"即可在此练习</span>';
-    } else if (mode === 'wrong-review') {
-        flow.innerHTML = '<div class="flow-status">🏆</div>';
-        if (pinyin) pinyin.textContent = '完美复习!';
-        if (wubi) wubi.textContent = '所有错字已消灭！';
-        if (roots) roots.innerHTML = '<span class="empty-text">当前错字本中没有需要复习的汉字啦！</span>';
-    } else {
-        flow.innerHTML = '<div class="flow-status">🎉</div>';
-        if (pinyin) pinyin.textContent = '通关!';
-        if (wubi) wubi.textContent = '请选择其他模式';
-    }
+    const messages = {
+        custom: '自由练习 · 暂无内容',
+        'wrong-review': '错字本已清空 · 完美复习',
+    };
+    flow.innerHTML = `<div class="flow-status">${messages[mode] || '通关 · 请选择其他模式'}</div>`;
 }
 
 export function setActiveIndex(prevIdx, nextIdx) {
@@ -74,68 +65,181 @@ export function getActiveCharElement() {
     return flow.querySelector('.flow-char.char-active');
 }
 
+function modeTag(char) {
+    if (REAL_YIJI_LIST.some(it => it.char === char)) return '一级简码';
+    if (ERJI_LIST.some(it => it.char === char)) return '二级简码';
+    if (HIGH_FREQ_LIST.some(it => it.char === char)) return '常用高频';
+    return '';
+}
+
 export function renderHints(wordObj) {
-    const pinyin = $('hint-pinyin');
-    const wubi = $('hint-wubi');
-    if (pinyin) pinyin.textContent = wordObj.py || '无音';
-    if (wubi) {
+    const glyph = $('hp-char');
+    const code = $('hp-code');
+    if (glyph) glyph.textContent = wordObj.char || '—';
+    if (code) {
         const display = wordObj.code !== wordObj.full
-            ? `${wordObj.code.toUpperCase()} [全码: ${wordObj.full.toUpperCase()}]`
-            : wordObj.full.toUpperCase();
-        wubi.textContent = display;
+            ? `${wordObj.code.toLowerCase()} · 全码 ${wordObj.full.toLowerCase()}`
+            : wordObj.full.toLowerCase();
+        const tag = modeTag(wordObj.char);
+        code.textContent = `五笔 ${display}${tag ? ` · ${tag}` : ''}${wordObj.py ? ` · ${wordObj.py}` : ''}`;
     }
 }
 
 export function setHintsVisibility(visible) {
-    const detail = $('active-char-detail');
-    const guide = $('roots-guide');
-    if (detail) detail.classList.toggle('is-visible', visible);
-    if (guide) guide.classList.toggle('is-visible', visible);
+    const panel = $('hanzi-panel');
+    if (panel) panel.classList.toggle('is-visible', visible);
+    if (!visible) {
+        decompToken++;
+        const canvas = $('hp-canvas');
+        if (canvas) canvas.innerHTML = '';
+        const radicals = $('hp-radicals');
+        if (radicals) radicals.innerHTML = '';
+        const meta = $('hp-meta');
+        if (meta) meta.textContent = '';
+    }
 }
 
-export function renderRootsGuide(wordObj, typedLen) {
-    const guide = $('roots-guide');
-    if (!guide) return;
-    guide.innerHTML = '';
+export function renderPracticeDecomposition(wordObj) {
+    const canvas = $('hp-canvas');
+    const radicals = $('hp-radicals');
+    const meta = $('hp-meta');
+    if (!canvas || !radicals || !wordObj) return;
 
-    for (let i = 0; i < wordObj.code.length; i++) {
-        const key = wordObj.code[i];
-        const card = document.createElement('div');
-        card.className = 'root-step-card';
-        if (i === typedLen) card.classList.add('active');
+    canvas.innerHTML = '<div class="hp-canvas-empty">加载中...</div>';
+    radicals.innerHTML = '';
+    if (meta) meta.textContent = '';
 
-        const keySpan = document.createElement('span');
-        keySpan.className = 'root-key';
-        keySpan.textContent = key.toUpperCase();
-        card.appendChild(keySpan);
+    const token = ++decompToken;
 
-        if (KEY_ROOTS[key]) {
-            const symbol = document.createElement('span');
-            symbol.className = 'root-symbol';
-            symbol.textContent = findMatchingRoot(wordObj.char, key);
-            card.appendChild(symbol);
+    Promise.all([
+        api.fetchWubi(wordObj.char).catch(() => null),
+        loadCharData(wordObj.char).catch(() => null)
+    ]).then(([wubi, charData]) => {
+        if (token !== decompToken) return;
+
+        const strokes = (charData && charData.strokes) || null;
+        if (strokes) {
+            drawStrokes(canvas, strokes, strokes.map((_, i) => i), 196);
+            if (meta) meta.textContent = `${strokes.length} 笔`;
+        } else {
+            canvas.innerHTML = '<div class="hp-canvas-empty">无字形</div>';
         }
 
-        guide.appendChild(card);
+        const code = (wordObj.full || wordObj.code || '').toLowerCase();
+        const segments = wubi && wubi.segments && wubi.segments.length ? wubi.segments : null;
+        renderRadicalCards(radicals, wordObj, code, strokes, segments);
+    }).catch(() => {
+        if (token !== decompToken) return;
+        canvas.innerHTML = '';
+        radicals.innerHTML = '';
+    });
+}
+
+let _hanziWriter;
+function getHanziWriter() {
+    if (!_hanziWriter) {
+        _hanziWriter = import('hanzi-writer').then(m => m.default || m);
     }
+    return _hanziWriter;
+}
+function loadCharData(char) {
+    return getHanziWriter().then(HanziWriter => HanziWriter.loadCharacterData(char));
+}
+
+function themeColors() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const root = getComputedStyle(document.documentElement);
+    const accent = (root.getPropertyValue('--primary') || '').trim() || '#FF8400';
+    return {
+        active: accent,
+        dim: dark ? '#404040' : '#D4D4D4'
+    };
+}
+
+function drawStrokes(target, strokes, activeIndices, size) {
+    target.innerHTML = '';
+    if (!strokes || !strokes.length) return;
+    const { active, dim } = themeColors();
+    const set = new Set(activeIndices || []);
+
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 1024 1024');
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
+
+    const group = document.createElementNS(SVG_NS, 'g');
+    group.setAttribute('transform', 'scale(1, -1) translate(0, -1024)');
+    svg.appendChild(group);
+
+    strokes.forEach((d, idx) => {
+        const path = document.createElementNS(SVG_NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', set.has(idx) ? active : dim);
+        group.appendChild(path);
+    });
+    target.appendChild(svg);
+}
+
+function renderRadicalCards(container, wordObj, code, strokes, segments) {
+    container.innerHTML = '';
+    for (let i = 0; i < code.length; i++) {
+        const indices = segments && segments[i + 1];
+        const isRecognition = !indices || indices.length === 0;
+        container.appendChild(buildRadicalCard(strokes, indices || [], code[i], isRecognition));
+    }
+}
+
+function buildRadicalCard(strokes, indices, key, isRecognition) {
+    const card = document.createElement('div');
+    card.className = 'hp-radical';
+    if (isRecognition) card.classList.add('is-recognition');
+
+    const g = document.createElement('span');
+    g.className = 'hp-radical-glyph';
+    card.appendChild(g);
+
+    const k = document.createElement('span');
+    k.className = 'hp-radical-key';
+    k.textContent = (key || '').toLowerCase();
+    card.appendChild(k);
+
+    const foot = document.createElement('span');
+    foot.className = 'hp-radical-foot';
+    if (isRecognition) {
+        foot.textContent = '识别码';
+    } else {
+        foot.textContent = indices.length ? `${indices.length} 笔` : '';
+    }
+    card.appendChild(foot);
+
+    if (isRecognition) {
+        g.textContent = '识';
+    } else if (strokes) {
+        drawStrokes(g, strokes, indices, 56);
+    } else {
+        g.textContent = '·';
+    }
+
+    return card;
 }
 
 export function renderProgress() {
     const s = getState();
     const el = $('stat-progress');
-    if (el) el.textContent = `${s.currentIndex}/${s.queue.length}`;
+    if (el) el.textContent = `${s.currentIndex} / ${s.queue.length}`;
+    const meta = $('practice-meta-progress');
+    if (meta) meta.textContent = `第 ${Math.min(s.currentIndex + 1, s.queue.length || 1)} 字 / 共 ${s.queue.length} 字`;
+    const footer = $('footer-progress');
+    if (footer) footer.textContent = `行 ${s.currentIndex}:${s.queue.length}`;
 }
 
 export function renderInstructions(mode) {
-    const el = $('instruction-text');
-    if (!el) return;
-
+    const sub = $('topbar-submode');
+    if (!sub) return;
     if (mode === 'reinforce') {
         const weakest = findWeakestZone();
         const label = ZONE_LABELS[weakest];
-        const keys = ZONE_KEYS[weakest].join(', ').toUpperCase();
-        el.innerHTML = `🎯 <b>${label}强化训练中</b>：系统当前针对您的最薄弱键区（<b>${keys}</b>）进行特训。请按空格提交击键。`;
-    } else {
-        el.innerHTML = '敲击物理键盘对应的五笔编码，然后按 <span class="kbd-key">Space 空格</span> 提交。遇到不会的字，可以停顿 1.5 秒查看键位提示。';
+        const keys = ZONE_KEYS[weakest].join(',').toUpperCase();
+        sub.textContent = `${label} · ${keys}`;
     }
 }
