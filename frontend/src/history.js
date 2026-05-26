@@ -127,9 +127,9 @@ function shortDate(date) {
 
 export function renderHistoryUI() {
     const tbody = $('history-table-body');
-    if (!tbody) return;
-
-    renderTrendChart();
+    if (tbody) {
+        renderTrendChart();
+    }
 
     const hist = getState().history;
     const total = hist.length;
@@ -147,23 +147,24 @@ export function renderHistoryUI() {
     const accEl = $('hist-avg-acc');
     if (accEl) accEl.textContent = `${avgAcc}%`;
 
-    tbody.innerHTML = '';
-    if (total === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td></tr>';
-        return;
-    }
-
-    hist.slice(0, 50).forEach(record => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+    if (tbody) {
+        tbody.innerHTML = '';
+        if (total === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-history-text">暂无历史记录，完成一轮打字练习即可记录！</td></tr>';
+        } else {
+            hist.slice(0, 50).forEach(record => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
             <td>${shortDate(record.date)}</td>
             <td>${record.mode}</td>
             <td><strong>${record.wpm}</strong></td>
             <td>${record.accuracy}%</td>
             <td>${record.wrongCount}</td>
         `;
-        tbody.appendChild(tr);
-    });
+                tbody.appendChild(tr);
+            });
+        }
+    }
 }
 
 function renderTrendChart() {

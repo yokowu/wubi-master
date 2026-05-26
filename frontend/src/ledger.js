@@ -6,7 +6,6 @@ import { KEY_ROOTS, REAL_YIJI_LIST, ZONE_KEYS, KEY_TO_ZONE } from './constants.j
 import { findMatchingRoot } from './practice/roots.js';
 import { api } from './api.js';
 import { ERJI_LIST } from './wubi86_data.js';
-import { refreshLedgerBadge } from './fab.js';
 
 let onAddToCustomPractice = () => {};
 
@@ -18,57 +17,24 @@ export function loadInitialWrongChars() {
     mutate(s => { s.wrongCharsLedger = storage.loadWrongChars(); });
 }
 
-export function renderWrongLedger() {
-    const list = $('wrong-chars-list');
-    const actions = $('wrong-actions');
-    if (!list) return;
-
-    const ledger = getState().wrongCharsLedger;
-    list.innerHTML = '';
-
-    if (ledger.size === 0) {
-        list.innerHTML = '<span class="empty-text">暂无错字，保持下去！</span>';
-        if (actions) actions.hidden = true;
-        refreshLedgerBadge();
-        return;
-    }
-
-    if (actions) actions.hidden = false;
-
-    ledger.forEach(char => {
-        const info = WUBI_DICT[char];
-        if (!info) return;
-
-        const badge = document.createElement('span');
-        badge.className = 'wrong-char-badge';
-        badge.innerHTML = `${char}<span>${info.s}</span>`;
-        badge.title = '点击添加此错字回练习队列';
-        badge.addEventListener('click', () => onAddToCustomPractice(char));
-        list.appendChild(badge);
-    });
-
-    refreshLedgerBadge();
-}
+export function renderWrongLedger() {}
 
 export function addWrongCharacter(wordObj) {
     const ledger = getState().wrongCharsLedger;
     if (ledger.has(wordObj.char)) return;
     ledger.add(wordObj.char);
     storage.saveWrongChars(ledger);
-    renderWrongLedger();
 }
 
 export function removeWrongCharacter(char) {
     const ledger = getState().wrongCharsLedger;
     if (!ledger.delete(char)) return;
     storage.saveWrongChars(ledger);
-    renderWrongLedger();
 }
 
 export function clearWrongLedger() {
     getState().wrongCharsLedger.clear();
     storage.saveWrongChars(getState().wrongCharsLedger);
-    renderWrongLedger();
 }
 
 function generateAnkiContent() {
@@ -136,7 +102,6 @@ function accumulatePermanentError(key) {
 
     const zones = getState().accumulatedWrongZones;
     zones[zone] = (zones[zone] || 0) + 1;
-    renderWeaknessAnalysis();
 
     api.bumpWeakness(zone).catch(err => {
         console.warn('Failed to sync weakness, falling back to localStorage', err);
@@ -148,33 +113,15 @@ export function loadWeaknessStats() {
     api.fetchWeakness()
         .then(zones => {
             mutate(s => { s.accumulatedWrongZones = zones; });
-            renderWeaknessAnalysis();
         })
         .catch(err => {
             console.warn('Backend /api/weakness unavailable, falling back to localStorage', err);
             const zones = storage.loadAccumulatedErrors();
             if (zones) mutate(s => { s.accumulatedWrongZones = zones; });
-            renderWeaknessAnalysis();
         });
 }
 
-export function renderWeaknessAnalysis() {
-    const data = getState().accumulatedWrongZones;
-    const counts = ['1', '2', '3', '4', '5'].map(z => data[z] || 0);
-    const max = Math.max(...counts);
-    const total = counts.reduce((a, b) => a + b, 0);
-
-    const btn = $('reinforce-weak-btn');
-    if (btn) btn.toggleAttribute('disabled', total === 0);
-
-    for (let i = 1; i <= 5; i++) {
-        const count = data[String(i)] || 0;
-        const countEl = $(`weak-count-${i}`);
-        const fill = $(`weak-fill-${i}`);
-        if (countEl) countEl.textContent = `${count}次`;
-        if (fill) fill.style.width = `${max > 0 ? Math.round((count / max) * 100) : 0}%`;
-    }
-}
+export function renderWeaknessAnalysis() {}
 
 export function findWeakestZone() {
     const zones = getState().accumulatedWrongZones;

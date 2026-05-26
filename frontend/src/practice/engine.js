@@ -14,12 +14,11 @@ import {
     setActiveIndex,
     getActiveCharElement,
     renderHints,
-    renderRootsGuide,
     renderProgress,
     renderInstructions,
-    setHintsVisibility
+    setHintsVisibility,
+    renderPracticeDecomposition
 } from './render.js';
-import { renderActivePracticeHint, showPracticePlaceholder, restoreDefaultQueryPlaceholder } from '../companion.js';
 import { resetStats, updateStatsUI, updateTimer } from './stats.js';
 
 let onSessionComplete = () => {};
@@ -109,8 +108,6 @@ export function loadPracticeMode(mode) {
     renderInstructions(mode);
 
     setHintsVisibility(false);
-    const word = queue[getState().currentIndex];
-    if (word) showPracticePlaceholder(word);
     resetHintTimer();
 }
 
@@ -169,7 +166,6 @@ export function handleInput() {
 
     const word = s.queue[s.currentIndex];
     if (word && getState().showHintActive) {
-        renderRootsGuide(word, raw.length);
         highlightNextKey(word, raw.length);
     }
 
@@ -196,10 +192,8 @@ function verifySubmission(typedCode) {
         });
 
         if (activeEl) activeEl.classList.add('correct-animation');
-        if (input) input.className = 'input-success';
         setTimeout(() => {
             if (activeEl) activeEl.classList.remove('correct-animation');
-            if (input) input.className = '';
         }, 200);
 
         if (s.mode === 'wrong-review') {
@@ -225,8 +219,6 @@ function verifySubmission(typedCode) {
         } else {
             setActiveIndex(prevIndex, next.currentIndex);
             renderProgress();
-            const nextWord = next.queue[next.currentIndex];
-            showPracticePlaceholder(nextWord);
         }
     } else {
         mutate(st => {
@@ -234,11 +226,9 @@ function verifySubmission(typedCode) {
             st.currentStreak = 0;
         });
 
-        if (activeEl) activeEl.classList.add('wrong-animation');
-        if (input) input.className = 'input-error';
+        if (activeEl) activeEl.classList.add('wrong-animation', 'is-error');
         setTimeout(() => {
-            if (activeEl) activeEl.classList.remove('wrong-animation');
-            if (input) input.className = '';
+            if (activeEl) activeEl.classList.remove('wrong-animation', 'is-error');
         }, 300);
 
         trackWrongKey(typedCode, word.code);
@@ -256,8 +246,7 @@ function verifySubmission(typedCode) {
         if (overlay) overlay.textContent = '';
 
         renderHints(word);
-        renderRootsGuide(word, 0);
-        renderActivePracticeHint(word);
+        renderPracticeDecomposition(word);
         highlightNextKey(word, 0);
         setHintsVisibility(true);
     }
@@ -291,13 +280,10 @@ export function resetHintTimer() {
         });
 
         renderHints(word);
-        renderRootsGuide(word, cur.typedText.length);
-        renderActivePracticeHint(word);
+        renderPracticeDecomposition(word);
         highlightNextKey(word, cur.typedText.length);
         setHintsVisibility(true);
     }, 1500);
 
     mutate(st => { st.hintTimeout = handle; });
 }
-
-export { restoreDefaultQueryPlaceholder };
