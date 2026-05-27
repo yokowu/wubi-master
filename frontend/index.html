@@ -50,7 +50,7 @@
 
                 <div class="sb-spacer"></div>
 
-                <div class="sb-bottom">
+                <div class="sb-bottom bracket">
                     <div class="sb-streak-head">
                         <span class="sb-streak-label">// 连击</span>
                         <span class="sb-streak-val" id="sb-streak-days">0 天</span>
@@ -67,18 +67,18 @@
                 <header class="app-topbar">
                     <div class="topbar-breadcrumb">
                         <span class="bc-prompt">&gt;</span>
-                        <span class="bc-section">练习</span>
+                        <span class="bc-section" id="topbar-section">练习</span>
                         <span class="bc-sep">/</span>
                         <span class="bc-mode" id="topbar-mode-label">一级简码</span>
                         <span class="bc-sep">/</span>
                         <span class="bc-sub" id="topbar-submode">常用字</span>
                     </div>
                     <div class="topbar-actions">
-                        <button type="button" class="topbar-icon" aria-label="搜索">
-                            <span class="ti-icon ti-icon-search" aria-hidden="true"></span>
-                            <span class="ti-shortcut">⌘K</span>
+                        <button type="button" class="topbar-icon" data-page="practice" id="nav-practice" aria-label="练习">
+                            <span class="ti-icon ti-icon-edit" aria-hidden="true"></span>
+                            <span class="ti-shortcut">⌘P</span>
                         </button>
-                        <button type="button" class="topbar-icon" id="open-report" aria-label="训练报告">
+                        <button type="button" class="topbar-icon" data-page="stats" id="nav-stats" aria-label="统计">
                             <span class="ti-icon ti-icon-chart" aria-hidden="true"></span>
                             <span class="ti-shortcut">⌘S</span>
                         </button>
@@ -87,60 +87,60 @@
                     </div>
                 </header>
 
-                <section class="metric-bar">
-                    <div class="metric-cell">
-                        <div class="metric-tag">// 字速</div>
-                        <div class="metric-row">
-                            <span class="metric-value" id="stat-wpm">0</span>
-                            <span class="metric-sub" id="stat-cpm">字/分 0</span>
-                        </div>
-                    </div>
-                    <span class="metric-divider"></span>
-                    <div class="metric-cell">
-                        <div class="metric-tag">// 准确率</div>
-                        <div class="metric-row">
-                            <span class="metric-value" id="stat-accuracy">100%</span>
-                            <span class="metric-sub" id="stat-wrong-sub">错 0</span>
-                        </div>
-                    </div>
-                    <span class="metric-divider"></span>
-                    <div class="metric-cell">
-                        <div class="metric-tag">// 已用时</div>
-                        <div class="metric-row">
-                            <span class="metric-value" id="stat-time">00:00</span>
-                            <span class="metric-sub">/ --:--</span>
-                        </div>
-                    </div>
-                    <span class="metric-divider"></span>
-                    <div class="metric-cell">
-                        <div class="metric-tag">// 进度</div>
-                        <div class="metric-row">
-                            <span class="metric-value" id="stat-progress">0 / 0</span>
-                            <span class="metric-sub" id="stat-streak">连对 0</span>
-                        </div>
-                    </div>
-                    <span class="metric-divider" id="rec-divider" hidden></span>
-                    <div class="rec-badge" id="rec-badge" hidden>
-                        <span class="rec-dot">●</span>
-                        <span>记录中</span>
-                    </div>
-                </section>
+                <main class="page-practice" id="page-practice">
+                    <section class="typing-area">
+                        <section class="metric-bar bracket">
+                            <div class="metric-cell">
+                                <div class="metric-tag">// 字速</div>
+                                <div class="metric-row">
+                                    <span class="metric-value" id="stat-wpm">0</span>
+                                    <span class="metric-sub" id="stat-cpm">字/分 0</span>
+                                </div>
+                            </div>
+                            <span class="metric-divider"></span>
+                            <div class="metric-cell">
+                                <div class="metric-tag">// 准确率</div>
+                                <div class="metric-row">
+                                    <span class="metric-value" id="stat-accuracy">100%</span>
+                                    <span class="metric-sub" id="stat-wrong-sub">错 0</span>
+                                </div>
+                            </div>
+                            <span class="metric-divider"></span>
+                            <div class="metric-cell">
+                                <div class="metric-tag">// 已用时</div>
+                                <div class="metric-row">
+                                    <span class="metric-value" id="stat-time">00:00</span>
+                                    <span class="metric-sub">/ --:--</span>
+                                </div>
+                            </div>
+                            <span class="metric-divider"></span>
+                            <div class="metric-cell">
+                                <div class="metric-tag">// 进度</div>
+                                <div class="metric-row">
+                                    <span class="metric-value" id="stat-progress">0 / 0</span>
+                                    <span class="metric-sub" id="stat-streak">连对 0</span>
+                                </div>
+                            </div>
+                            <span class="metric-divider" id="rec-divider" hidden></span>
+                            <div class="rec-badge" id="rec-badge" hidden>
+                                <span class="rec-dot">●</span>
+                                <span>记录中</span>
+                            </div>
+                        </section>
 
-                <main class="practice-stage">
-                    <div class="practice-core">
-                        <section class="typing-block">
+                        <div class="typing-text-block bracket">
                             <div class="practice-meta">
                                 <span class="practice-meta-tag">// 输入高亮的字</span>
                                 <span class="practice-meta-progress" id="practice-meta-progress">第 1 字 / 共 0 字</span>
                             </div>
                             <div class="practice-text-flow" id="practice-text-flow"></div>
                             <input type="text" id="practice-input" class="practice-input-hidden" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus aria-label="五笔编码输入" />
-                        </section>
+                        </div>
 
-                        <section class="hanzi-panel" id="hanzi-panel">
+                        <section class="hanzi-panel bracket" id="hanzi-panel">
                             <header class="hp-head">
                                 <div class="hp-head-left">
-                                    <span class="hp-glyph" id="hp-char">—</span>
+                                    <span class="hp-head-tag">// 字形拆解</span>
                                     <span class="hp-code" id="hp-code">五笔 —</span>
                                 </div>
                                 <div class="hp-head-right">
@@ -149,31 +149,87 @@
                                 </div>
                             </header>
                             <div class="hp-body">
-                                <div class="hp-canvas" id="hp-canvas"></div>
+                                <div class="hp-canvas-wrap">
+                                    <div class="hp-canvas" id="hp-canvas"><span class="hp-glyph" id="hp-char">—</span></div>
+                                    <div class="hp-progress" id="hp-progress" hidden>
+                                        <span class="hp-progress-label">笔画 · 0 / 0</span>
+                                    </div>
+                                </div>
                                 <div class="hp-decomp">
                                     <div class="hp-section-title">// 字根拆解</div>
                                     <div class="hp-radicals" id="hp-radicals"></div>
                                 </div>
                             </div>
                         </section>
-                    </div>
+                    </section>
+
+                    <footer class="app-footer">
+                        <div class="footer-left">
+                            <span class="footer-shortcut"><span class="ghost-key">[esc]</span><span class="ghost-label">退出</span></span>
+                            <span class="footer-shortcut"><span class="ghost-key">[tab]</span><span class="ghost-label">下一行</span></span>
+                            <span class="footer-shortcut"><span class="ghost-key">[⌘R]</span><span class="ghost-label">重启</span></span>
+                            <span class="footer-shortcut"><span class="ghost-key">[⌘?]</span><span class="ghost-label">帮助</span></span>
+                        </div>
+                        <div class="footer-right">
+                            <span class="footer-status">常规</span>
+                            <span class="footer-divider">·</span>
+                            <span class="footer-status footer-status-muted" id="footer-progress">行 0:0</span>
+                            <span class="footer-divider">·</span>
+                            <span class="footer-status footer-status-muted">utf-8</span>
+                        </div>
+                    </footer>
                 </main>
 
-                <footer class="app-footer">
-                    <div class="footer-left">
-                        <span class="footer-shortcut"><span class="ghost-key">[esc]</span><span class="ghost-label">退出</span></span>
-                        <span class="footer-shortcut"><span class="ghost-key">[tab]</span><span class="ghost-label">下一行</span></span>
-                        <span class="footer-shortcut"><span class="ghost-key">[⌘R]</span><span class="ghost-label">重启</span></span>
-                        <span class="footer-shortcut"><span class="ghost-key">[⌘?]</span><span class="ghost-label">帮助</span></span>
+                <main class="page-stats" id="page-stats" hidden>
+                    <div class="stats-content">
+                        <section class="stats-metrics" id="stats-metrics"></section>
+
+                        <section class="stats-card stats-trend bracket">
+                            <header class="stats-card-head">
+                                <div class="stats-card-head-left">
+                                    <div class="stats-card-tag">// 字速趋势 · 按模式分组</div>
+                                    <div class="stats-card-title">近 14 天表现</div>
+                                </div>
+                                <div class="stats-card-head-right">
+                                    <div class="trend-legend" id="trend-legend"></div>
+                                    <div class="trend-target">
+                                        <span class="trend-dash">┄</span>
+                                        <span>目标 50 字速</span>
+                                    </div>
+                                </div>
+                            </header>
+                            <div class="trend-chart">
+                                <div class="trend-yaxis" id="trend-yaxis"></div>
+                                <div class="trend-bars" id="trend-bars"></div>
+                            </div>
+                            <div class="trend-xaxis" id="trend-xaxis"></div>
+                        </section>
+
+                        <section class="stats-bottom">
+                            <section class="stats-card stats-weak bracket">
+                                <header class="stats-card-head">
+                                    <div class="stats-card-head-left">
+                                        <div class="stats-card-tag">// 易错字根</div>
+                                        <div class="stats-card-title">本周高频错误</div>
+                                    </div>
+                                    <a class="stats-card-link" href="#weak">[ 全部 → ]</a>
+                                </header>
+                                <div class="weak-table" id="weak-table"></div>
+                            </section>
+
+                            <section class="stats-card stats-sess bracket">
+                                <header class="stats-card-head">
+                                    <div class="stats-card-head-left">
+                                        <div class="stats-card-tag">// 最近会话</div>
+                                        <div class="stats-card-title">最近 7 次记录</div>
+                                    </div>
+                                    <a class="stats-card-link" href="#sess">[ 全部 → ]</a>
+                                </header>
+                                <div class="sess-table" id="sess-table"></div>
+                            </section>
+                        </section>
                     </div>
-                    <div class="footer-right">
-                        <span class="footer-status">常规</span>
-                        <span class="footer-divider">·</span>
-                        <span class="footer-status footer-status-muted" id="footer-progress">行 0:0</span>
-                        <span class="footer-divider">·</span>
-                        <span class="footer-status footer-status-muted">utf-8</span>
-                    </div>
-                </footer>
+                </main>
             </div>
         </div>
     </div>
@@ -185,10 +241,10 @@
                     <span class="rm-dot">●</span>
                     <span class="rm-title" id="report-title">// 训练报告</span>
                     <span class="rm-sep">·</span>
-                    <span class="rm-session" id="report-session">—</span>
+                    <span class="rm-session" id="report-session">本轮</span>
                 </div>
                 <div class="rm-head-right">
-                    <span class="rm-time" id="report-time">—</span>
+                    <span class="rm-time" id="report-time">--</span>
                     <button type="button" class="rm-close" id="report-close" aria-label="关闭">×</button>
                 </div>
             </header>
@@ -200,15 +256,15 @@
                             <span class="rm-stat-value" id="report-wpm">0</span>
                             <span class="rm-stat-unit">字/分</span>
                         </div>
-                        <div class="rm-stat-foot" id="report-wpm-foot">峰值 0</div>
+                        <div class="rm-stat-foot" id="report-wpm-foot">峰值 —</div>
                     </div>
                     <div class="rm-stat">
                         <div class="rm-stat-tag">// 准确率</div>
                         <div class="rm-stat-row">
-                            <span class="rm-stat-value" id="report-acc">0</span>
+                            <span class="rm-stat-value" id="report-accuracy">0</span>
                             <span class="rm-stat-unit">%</span>
                         </div>
-                        <div class="rm-stat-foot" id="report-acc-foot">错 0 / 总 0</div>
+                        <div class="rm-stat-foot" id="report-accuracy-foot">错 0 / 总 0</div>
                     </div>
                     <div class="rm-stat">
                         <div class="rm-stat-tag">// 击键速度</div>

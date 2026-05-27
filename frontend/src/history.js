@@ -15,9 +15,11 @@ const CHART_CONFIG = {
 const MODES_LIST = ['一级简码', '二级简码', '常用高频', '难字专项', '错字复习', '自由练习'];
 
 function normalizeRecord(r) {
+    const ts = r.timestamp || r.date;
     return {
         id: r.id,
-        date: new Date(r.timestamp || r.date).toLocaleString('zh-CN', { hour12: false }),
+        timestamp: ts,
+        date: new Date(ts).toLocaleString('zh-CN', { hour12: false }),
         mode: r.mode,
         wpm: r.wpm,
         accuracy: r.accuracy,
@@ -50,6 +52,7 @@ export function recordPracticeSession() {
 
     const record = {
         id: Date.now(),
+        timestamp: new Date().toISOString(),
         date: new Date().toLocaleString('zh-CN', { hour12: false }),
         mode: HISTORY_MODE_LABELS[s.mode] || s.mode,
         wpm,

@@ -19,6 +19,7 @@ import {
 } from './practice/engine.js';
 import { switchMode } from './modes.js';
 import { showReport, hideReport, setupReportModal } from './report.js';
+import { renderStatsPage } from './stats/render.js';
 
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -26,7 +27,39 @@ function applyTheme(theme) {
 
 function setupSidebarNav() {
     document.querySelectorAll('.sb-nav-item').forEach(btn => {
-        btn.addEventListener('click', () => switchMode(btn.dataset.mode));
+        btn.addEventListener('click', () => {
+            switchPage('practice');
+            switchMode(btn.dataset.mode);
+        });
+    });
+}
+
+function setupPageNav() {
+    document.querySelectorAll('.topbar-icon[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => switchPage(btn.dataset.page));
+    });
+}
+
+function switchPage(page) {
+    const practice = $('page-practice');
+    const stats = $('page-stats');
+    const section = $('topbar-section');
+
+    if (page === 'stats') {
+        if (practice) practice.setAttribute('hidden', '');
+        if (stats) stats.removeAttribute('hidden');
+        if (section) section.textContent = '统计';
+        renderStatsPage();
+    } else {
+        if (stats) stats.setAttribute('hidden', '');
+        if (practice) practice.removeAttribute('hidden');
+        if (section) section.textContent = '练习';
+        const input = $('practice-input');
+        if (input) input.focus();
+    }
+
+    document.querySelectorAll('.topbar-icon[data-page]').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.page === page);
     });
 }
 
@@ -88,9 +121,14 @@ function setupGlobalKeys() {
             if (input) input.focus();
             return;
         }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+            e.preventDefault();
+            switchPage('practice');
+            return;
+        }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
             e.preventDefault();
-            showReport();
+            switchPage('stats');
             return;
         }
         if ((e.metaKey || e.ctrlKey) && /^[1-7]$/.test(e.key)) {
@@ -148,6 +186,7 @@ function init() {
     setLedgerHandlers({ addToCustomPractice: addCharToCustomPractice });
 
     setupSidebarNav();
+    setupPageNav();
     setupThemeToggle();
     setupResetButton();
     setupPracticeInput();
@@ -163,6 +202,10 @@ function init() {
             hideReport();
             const input = $('practice-input');
             if (input) input.focus();
+        },
+        onSecondary: () => {
+            hideReport();
+            switchPage('stats');
         }
     });
 
@@ -175,6 +218,7 @@ function init() {
     setupStreakGrid();
 
     applyTheme(storage.loadTheme());
+    switchPage('practice');
     switchMode('yiji');
 }
 
