@@ -147,13 +147,10 @@ function loadCharData(char) {
 }
 
 function themeColors() {
-    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
     const root = getComputedStyle(document.documentElement);
-    const accent = (root.getPropertyValue('--primary') || '').trim() || '#FF8400';
-    return {
-        active: accent,
-        dim: dark ? '#404040' : '#D4D4D4'
-    };
+    const active = (root.getPropertyValue('--ink-primary') || '').trim() || '#0B1220';
+    const dim = (root.getPropertyValue('--ink-muted') || '').trim() || '#D8DCE5';
+    return { active, dim };
 }
 
 function drawStrokes(target, strokes, activeIndices, size) {
@@ -183,7 +180,7 @@ function drawStrokes(target, strokes, activeIndices, size) {
 function renderRadicalCards(container, wordObj, code, strokes, segments) {
     container.innerHTML = '';
     for (let i = 0; i < code.length; i++) {
-        const indices = segments && segments[i + 1];
+        const indices = segments && segments[i];
         const isRecognition = !indices || indices.length === 0;
         container.appendChild(buildRadicalCard(strokes, indices || [], code[i], isRecognition));
     }

@@ -14,8 +14,8 @@ const MODE_SUB = {
 
 let handlers = {};
 
-export function setupReportModal({ onRestart, onClose }) {
-    handlers = { onRestart, onClose };
+export function setupReportModal({ onRestart, onClose, onSecondary }) {
+    handlers = { onRestart, onClose, onSecondary };
     const overlay = $('report-overlay');
     const close = $('report-close');
     const restart = $('report-restart');
@@ -26,7 +26,10 @@ export function setupReportModal({ onRestart, onClose }) {
     });
     if (close) close.addEventListener('click', () => handlers.onClose && handlers.onClose());
     if (restart) restart.addEventListener('click', () => handlers.onRestart && handlers.onRestart());
-    if (secondary) secondary.addEventListener('click', () => handlers.onClose && handlers.onClose());
+    if (secondary) secondary.addEventListener('click', () => {
+        if (handlers.onSecondary) handlers.onSecondary();
+        else if (handlers.onClose) handlers.onClose();
+    });
 }
 
 export function showReport() {
@@ -71,8 +74,8 @@ function populate() {
     setText('report-time', time);
     setText('report-wpm', String(wpm));
     setText('report-wpm-foot', `连对 ${s.maxStreak} · 停顿 ${s.hesitationCount}`);
-    setText('report-acc', String(acc));
-    setText('report-acc-foot', `错 ${s.wrongTyped} / 总 ${s.totalTyped}`);
+    setText('report-accuracy', String(acc));
+    setText('report-accuracy-foot', `错 ${s.wrongTyped} / 总 ${s.totalTyped}`);
     setText('report-cpm', String(cpm));
     setText('report-cpm-foot', `回退 ${s.backspaceCount} 次`);
     setText('report-done', String(done));
