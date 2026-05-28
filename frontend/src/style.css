@@ -816,6 +816,8 @@ a { color: inherit; text-decoration: none; }
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 .trend-legend-item {
     display: inline-flex;
@@ -827,6 +829,15 @@ a { color: inherit; text-decoration: none; }
     font-size: 10px;
     color: var(--ink-primary);
     font-weight: 500;
+    white-space: nowrap;
+}
+.trend-legend-label,
+.trend-legend-mean {
+    white-space: nowrap;
+}
+.trend-legend-empty {
+    font-size: 10px;
+    color: var(--ink-tertiary);
 }
 .trend-legend-swatch {
     width: 10px;
@@ -890,6 +901,7 @@ a { color: inherit; text-decoration: none; }
 }
 .trend-bar-stack {
     width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -898,11 +910,15 @@ a { color: inherit; text-decoration: none; }
 }
 .trend-bar-seg {
     width: 100%;
-    min-height: 0;
+    min-height: 2px;
 }
 .trend-bar-seg.c1 { background: var(--stat-c1); }
-.trend-bar-seg.c2 { background: color-mix(in srgb, var(--stat-c1) 40%, transparent); }
-.trend-bar-seg.c3 { background: color-mix(in srgb, var(--stat-c1) 20%, transparent); }
+.trend-bar-seg.c2 { background: var(--stat-c2); }
+.trend-bar-seg.c3 { background: var(--stat-c3); }
+.trend-bar-seg.c4 { background: var(--stat-c4); }
+.trend-bar-seg.c5 { background: color-mix(in srgb, var(--stat-c1) 60%, var(--stat-c3)); }
+.trend-bar-seg.c6 { background: color-mix(in srgb, var(--stat-c2) 60%, var(--stat-c4)); }
+.trend-bar-seg.c7 { background: color-mix(in srgb, var(--stat-c3) 50%, var(--stat-c1)); }
 .trend-bar-empty {
     width: 100%;
     height: 4px;
