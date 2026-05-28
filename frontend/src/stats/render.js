@@ -129,7 +129,7 @@ function renderTrend() {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         const key = dayKey(d);
-        days.push({ date: d, key, label: fmtDate(d) });
+        days.push({ key, label: fmtDate(d) });
         dayBuckets[key] = emptyBucket();
     }
 
@@ -179,8 +179,7 @@ function renderTrend() {
             segs.forEach(({ mode, avg }) => {
                 const seg = document.createElement('div');
                 seg.className = `trend-bar-seg ${segClass[mode]}`;
-                const pct = Math.min(100, (avg / yMax) * 100);
-                seg.style.flex = `${pct} 0 0`;
+                seg.style.flex = `${Math.min(100, (avg / yMax) * 100)} 0 0`;
                 seg.title = `${mode} · ${Math.round(avg)} 字速`;
                 stack.appendChild(seg);
             });
@@ -230,8 +229,6 @@ function renderWeakTable() {
 
     const cnt = getState().wrongKeysCount || {};
     const ledger = Array.from(getState().wrongCharsLedger || []);
-    const charErr = {};
-    ledger.forEach(ch => { charErr[ch] = (charErr[ch] || 0) + 1; });
 
     const charStats = ledger.map(ch => {
         const info = WUBI_DICT[ch];
@@ -258,7 +255,7 @@ function renderWeakTable() {
     if (top.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'weak-row';
-        empty.innerHTML = `<span colspan="5" style="grid-column: span 5; text-align:center; color: var(--ink-tertiary);">暂无错字记录</span>`;
+        empty.innerHTML = `<span style="grid-column: span 5; text-align:center; color: var(--ink-tertiary);">暂无错字记录</span>`;
         table.appendChild(empty);
         return;
     }
