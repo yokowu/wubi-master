@@ -1,15 +1,22 @@
 import { $ } from '../dom.js';
 import { getState } from '../state.js';
 import { WUBI_DICT } from '../wubi86_data.js';
-import { HISTORY_MODE_LABELS } from '../constants.js';
 
-const MODE_GROUPS = {
-    'L1 基础': ['一级简码', '二级简码'],
-    'L2 强化': ['常用高频', '难字专项', '薄弱区强化'],
-    '词组': ['错字复习', '自由练习']
-};
-const GROUP_ORDER = ['L1 基础', 'L2 强化', '词组'];
-const SEG_CLASS = { 'L1 基础': 'c1', 'L2 强化': 'c2', '词组': 'c3' };
+const SEG_PALETTE = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'];
+
+function buildModeIndex(history) {
+    const order = [];
+    const seen = new Set();
+    history.forEach(r => {
+        const m = r.mode;
+        if (!m || seen.has(m)) return;
+        seen.add(m);
+        order.push(m);
+    });
+    const segClass = {};
+    order.forEach((m, i) => { segClass[m] = SEG_PALETTE[i % SEG_PALETTE.length]; });
+    return { order, segClass };
+}
 
 function fmtDate(d) {
     const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -19,13 +26,6 @@ function fmtDate(d) {
 
 function dayKey(d) {
     return d.toISOString().slice(0, 10);
-}
-
-function modeGroupOf(modeLabel) {
-    for (const [group, modes] of Object.entries(MODE_GROUPS)) {
-        if (modes.includes(modeLabel)) return group;
-    }
-    return '词组';
 }
 
 function buildStatCard({ index, label, value, unit, delta, color }) {
@@ -118,32 +118,32 @@ function renderTrend() {
     if (!bars) return;
 
     const history = getState().history || [];
+    const { order: modeOrder, segClass } = buildModeIndex(history);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const days = [];
     const dayBuckets = {};
+    const emptyBucket = () => Object.fromEntries(modeOrder.map(m => [m, []]));
     for (let i = 13; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         const key = dayKey(d);
         days.push({ date: d, key, label: fmtDate(d) });
-        dayBuckets[key] = { 'L1 基础': [], 'L2 强化': [], '词组': [] };
+        dayBuckets[key] = emptyBucket();
     }
 
     history.forEach(r => {
         const t = new Date(r.timestamp || r.date);
         t.setHours(0, 0, 0, 0);
         const key = dayKey(t);
-        if (!dayBuckets[key]) return;
-        const group = modeGroupOf(r.mode);
-        dayBuckets[key][group].push(r.wpm || 0);
+        if (!dayBuckets[key] || !r.mode) return;
+        dayBuckets[key][r.mode].push(r.wpm || 0);
     });
 
-    const groupAvg = { 'L1 基础': [], 'L2 强化': [], '词组': [] };
+    const modeAvg = Object.fromEntries(modeOrder.map(m => [m, []]));
     history.forEach(r => {
-        const group = modeGroupOf(r.mode);
-        if (r.wpm) groupAvg[group].push(r.wpm);
+        if (r.mode && r.wpm) modeAvg[r.mode].push(r.wpm);
     });
 
     const yMax = 60;
@@ -162,11 +162,11 @@ function renderTrend() {
         stack.className = 'trend-bar-stack';
 
         const buckets = dayBuckets[key];
-        const segs = GROUP_ORDER.map(group => {
-            const arr = buckets[group];
-            if (!arr.length) return null;
+        const segs = modeOrder.map(mode => {
+            const arr = buckets[mode];
+            if (!arr || !arr.length) return null;
             const avg = arr.reduce((s, v) => s + v, 0) / arr.length;
-            return { group, avg };
+            return { mode, avg };
         }).filter(Boolean);
 
         if (segs.length === 0) {
@@ -174,12 +174,14 @@ function renderTrend() {
             empty.className = 'trend-bar-empty';
             stack.appendChild(empty);
         } else {
-            segs.forEach(({ group, avg }) => {
+            const totalPct = segs.reduce((s, x) => s + Math.min(100, (x.avg / yMax) * 100), 0);
+            stack.style.height = `${Math.min(100, totalPct)}%`;
+            segs.forEach(({ mode, avg }) => {
                 const seg = document.createElement('div');
-                seg.className = `trend-bar-seg ${SEG_CLASS[group]}`;
+                seg.className = `trend-bar-seg ${segClass[mode]}`;
                 const pct = Math.min(100, (avg / yMax) * 100);
-                seg.style.height = `${Math.max(2, pct * 0.9)}%`;
-                seg.title = `${group} · ${Math.round(avg)} 字速`;
+                seg.style.flex = `${pct} 0 0`;
+                seg.title = `${mode} · ${Math.round(avg)} 字速`;
                 stack.appendChild(seg);
             });
         }
@@ -200,18 +202,25 @@ function renderTrend() {
 
     if (legend) {
         legend.innerHTML = '';
-        GROUP_ORDER.forEach(group => {
-            const arr = groupAvg[group];
-            const mean = arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
-            const item = document.createElement('span');
-            item.className = 'trend-legend-item';
-            item.innerHTML = `
-                <span class="trend-legend-swatch trend-bar-seg ${SEG_CLASS[group]}"></span>
-                <span>${group}</span>
-                <span class="trend-legend-mean">均 ${mean}</span>
-            `;
-            legend.appendChild(item);
-        });
+        if (modeOrder.length === 0) {
+            const empty = document.createElement('span');
+            empty.className = 'trend-legend-empty';
+            empty.textContent = '暂无数据';
+            legend.appendChild(empty);
+        } else {
+            modeOrder.forEach(mode => {
+                const arr = modeAvg[mode];
+                const mean = arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
+                const item = document.createElement('span');
+                item.className = 'trend-legend-item';
+                item.innerHTML = `
+                    <span class="trend-legend-swatch trend-bar-seg ${segClass[mode]}"></span>
+                    <span class="trend-legend-label">${mode}</span>
+                    <span class="trend-legend-mean">均 ${mean}</span>
+                `;
+                legend.appendChild(item);
+            });
+        }
     }
 }
 
@@ -302,15 +311,9 @@ function renderSessTable() {
         const hh = String(t.getHours()).padStart(2, '0');
         const mm = String(t.getMinutes()).padStart(2, '0');
         const dur = Math.round((r.duration || 0) / 60);
-        const groupLabel = (() => {
-            for (const [group, modes] of Object.entries(MODE_GROUPS)) {
-                if (modes.includes(r.mode)) return group;
-            }
-            return r.mode;
-        })();
         row.innerHTML = `
             <span>${hh}:${mm}</span>
-            <span class="sess-cell-mode">${groupLabel}</span>
+            <span class="sess-cell-mode">${r.mode || '-'}</span>
             <span class="sess-cell-num">${r.wpm}</span>
             <span class="sess-cell-num">${r.accuracy}%</span>
             <span>${dur} 分</span>
