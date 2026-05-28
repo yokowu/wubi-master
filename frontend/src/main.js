@@ -49,7 +49,7 @@ function switchPage(page) {
         if (practice) practice.setAttribute('hidden', '');
         if (stats) stats.removeAttribute('hidden');
         if (section) section.textContent = '统计';
-        renderStatsPage();
+        loadPracticeHistory().then(() => renderStatsPage());
     } else {
         if (stats) stats.setAttribute('hidden', '');
         if (practice) practice.removeAttribute('hidden');

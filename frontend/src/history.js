@@ -29,7 +29,7 @@ function normalizeRecord(r) {
 }
 
 export function loadPracticeHistory() {
-    api.fetchHistory()
+    return api.fetchHistory()
         .then(data => {
             mutate(s => { s.history = data.map(normalizeRecord); });
             renderHistoryUI();
