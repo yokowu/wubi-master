@@ -78,6 +78,10 @@
                             <span class="ti-icon ti-icon-edit" aria-hidden="true"></span>
                             <span class="ti-shortcut">⌘P</span>
                         </button>
+                        <button type="button" class="topbar-icon" data-page="search" id="nav-search" aria-label="搜索">
+                            <span class="ti-icon ti-icon-search" aria-hidden="true"></span>
+                            <span class="ti-shortcut">⌘K</span>
+                        </button>
                         <button type="button" class="topbar-icon" data-page="stats" id="nav-stats" aria-label="统计">
                             <span class="ti-icon ti-icon-chart" aria-hidden="true"></span>
                             <span class="ti-shortcut">⌘S</span>
@@ -178,6 +182,48 @@
                             <span class="footer-status footer-status-muted">utf-8</span>
                         </div>
                     </footer>
+                </main>
+
+                <main class="page-search" id="page-search" hidden>
+                    <section class="search-sidebar">
+                        <div class="search-input-wrap bracket">
+                            <label class="search-label" for="search-input">// 搜索汉字 / 编码 / 拼音</label>
+                            <input type="search" id="search-input" class="search-input" value="我" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+                        </div>
+
+                        <section class="search-results-panel bracket">
+                            <header class="search-panel-head">
+                                <span class="search-panel-title">// 匹配结果</span>
+                                <span class="search-panel-count" id="search-count">0 个结果</span>
+                            </header>
+                            <div class="search-results" id="search-results"></div>
+                        </section>
+                    </section>
+
+                    <section class="search-detail">
+                        <section class="hanzi-panel search-hanzi-panel bracket is-visible">
+                            <header class="hp-head">
+                                <div class="hp-head-left">
+                                    <span class="hp-head-tag">// 字形拆解</span>
+                                    <span class="hp-code" id="search-hp-code">五笔 —</span>
+                                </div>
+                                <div class="hp-head-right">
+                                    <span class="hp-meta" id="search-hp-meta">— 笔画</span>
+                                </div>
+                            </header>
+                            <div class="hp-body">
+                                <div class="hp-canvas-wrap">
+                                    <div class="hp-canvas search-hp-canvas" id="search-hp-canvas">
+                                        <span class="hp-glyph" id="search-hp-char">我</span>
+                                    </div>
+                                </div>
+                                <div class="hp-decomp">
+                                    <div class="hp-section-title">// 字根拆解</div>
+                                    <div class="hp-radicals" id="search-hp-radicals"></div>
+                                </div>
+                            </div>
+                        </section>
+                    </section>
                 </main>
 
                 <main class="page-stats" id="page-stats" hidden>

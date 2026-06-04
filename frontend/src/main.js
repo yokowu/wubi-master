@@ -17,9 +17,10 @@ import {
     handleSpecialKeys,
     setEngineHandlers
 } from './practice/engine.js';
-import { switchMode } from './modes.js';
+import { switchMode, setBreadcrumb } from './modes.js';
 import { showReport, hideReport, setupReportModal } from './report.js';
 import { renderStatsPage } from './stats/render.js';
+import { setupSearchPage, focusSearch } from './search/render.js';
 
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -42,18 +43,34 @@ function setupPageNav() {
 
 function switchPage(page) {
     const practice = $('page-practice');
+    const search = $('page-search');
     const stats = $('page-stats');
     const section = $('topbar-section');
+    const mode = $('topbar-mode-label');
+    const submode = $('topbar-submode');
 
     if (page === 'stats') {
         if (practice) practice.setAttribute('hidden', '');
+        if (search) search.setAttribute('hidden', '');
         if (stats) stats.removeAttribute('hidden');
         if (section) section.textContent = '统计';
+        if (mode) mode.textContent = '训练数据';
+        if (submode) submode.textContent = '近 14 天';
         loadPracticeHistory().then(() => renderStatsPage());
+    } else if (page === 'search') {
+        if (practice) practice.setAttribute('hidden', '');
+        if (stats) stats.setAttribute('hidden', '');
+        if (search) search.removeAttribute('hidden');
+        if (section) section.textContent = '搜索';
+        if (mode) mode.textContent = '字根拆解';
+        if (submode) submode.textContent = '五笔 86';
+        focusSearch();
     } else {
         if (stats) stats.setAttribute('hidden', '');
+        if (search) search.setAttribute('hidden', '');
         if (practice) practice.removeAttribute('hidden');
         if (section) section.textContent = '练习';
+        setBreadcrumb(getState().mode);
         const input = $('practice-input');
         if (input) input.focus();
     }
@@ -98,6 +115,8 @@ function setupPracticeInput() {
 
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('button, a, input, select')) return;
+        const practice = $('page-practice');
+        if (practice && practice.hasAttribute('hidden')) return;
         input.focus();
     });
 }
@@ -124,6 +143,11 @@ function setupGlobalKeys() {
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
             e.preventDefault();
             switchPage('practice');
+            return;
+        }
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            switchPage('search');
             return;
         }
         if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
@@ -187,6 +211,7 @@ function init() {
 
     setupSidebarNav();
     setupPageNav();
+    setupSearchPage();
     setupThemeToggle();
     setupResetButton();
     setupPracticeInput();
