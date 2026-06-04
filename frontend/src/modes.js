@@ -22,7 +22,7 @@ const MODE_SUBLABELS = {
     reinforce: '薄弱区'
 };
 
-function setBreadcrumb(mode) {
+export function setBreadcrumb(mode) {
     const modeLabel = $('topbar-mode-label');
     const subLabel = $('topbar-submode');
     if (modeLabel) modeLabel.textContent = MODE_LABELS[mode] || '练习';
